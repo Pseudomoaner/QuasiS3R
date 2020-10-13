@@ -12,11 +12,11 @@ for i = 1:fS.motileSteps
     field = field.stepModel(fS.motiledt,fS.f0,inf,fS.growthRate,fS.divThresh,fS.postDivMovement,fS.colJigRate,dS.colourCells);
     
     if rem(i,fS.FrameSkip) == 0
-        outImg = field.drawField(dS.posVec);
+        outImg = field.drawField();
         pause(0.01)
         if dS.saveFrames
-            imPath1 = sprintf(dS.ImgPath1,fC);
-            fullImPath = [dS.imagedirectory, filesep, imPath1];
+            imPath = sprintf(dS.ImgPath,fC);
+            fullImPath = [dS.imagedirectory, filesep, imPath];
             
             imwrite(outImg,fullImPath)
             
