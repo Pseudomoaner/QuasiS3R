@@ -33,6 +33,9 @@ classdef WensinkField
         boundConds %Boundary conditions (periodic or none)
         boundaryDesign %Image containing an image of the design of the confinement
         resUp %Difference in resolution between boundaryDesign image and actual simulation domain
+        
+        gpuAvailable %Whether there is a GPU available in the current system
+        compiled %Whether there is a compiled .mex version of the potential gradient functions available
     end
     methods
         function obj = WensinkField(xWidth,yHeight,zDepth,U0,lam,boundaryConditions)
@@ -47,6 +50,26 @@ classdef WensinkField
             obj.U0 = U0;
             obj.lam = lam;
             obj.boundConds = boundaryConditions;
+            
+            %Check to see if GPU and/or .mex files are available for
+            %calculating the potential between rods
+            try
+                gpuArray(1);
+                obj.gpuAvailable = false; %Currently set to false because the GPU is slower than the CPU for the current problem size... but good to keep the option, in case I manage to optimise things more successfully in the future
+            catch
+                obj.gpuAvailable = false;
+            end
+            
+            locPath = mfilename('fullpath');
+            locPath = locPath(1:end-13); %Path without the uneccessary '\WensinkField' on the end
+            
+            if exist(fullfile(locPath,'PotentialCalculations',['mexCalcEnergyGradientsPeriodic.',mexext]),'file') && strcmp(obj.boundConds,'periodic')
+                obj.compiled = true;
+            elseif exist(fullfile(locPath,'PotentialCalculations',['mexCalcEnergyGradients.',mexext]),'file') && strcmp(obj.boundConds,'none')
+                obj.compiled = true;
+            else
+                obj.compiled = false;
+            end
         end
         
         function obj = populateField(obj,barrierSettingsType,barrierSettings,cellSettingsType,cellSettings,areaFrac)
@@ -106,7 +129,7 @@ classdef WensinkField
                     obj.fCells = cellSettings.f * ones(size(obj.xCells));
                     obj.rCells = cellSettings.r * ones(size(obj.xCells));
                     obj.cCells = rand(size(obj.xCells,1),3);
-              end
+            end
             
             [obj.nCells,obj.lCells] = calculateSegmentNumberLength(obj.aCells,obj.lam);
             obj.uCells = [cos(obj.thetCells).*cos(obj.phiCells),sin(obj.thetCells).*cos(obj.phiCells),sin(obj.phiCells)];
@@ -327,72 +350,39 @@ classdef WensinkField
         end
         
         function [drdt,dthetadt,dphidt] = calcVelocities(obj,f0,zElasticity)
-            %Calculates the rate of translation and rotation for all cells
-            includeMat = obj.cellDists < obj.distThresh;
-            includeMat(logical(diag(ones(length(includeMat),1)))) = 0;
-            includeMat = includeMat(1:length(obj.nCells),:); %Alpha rods should include all cells, beta rods all cells and all barrier rods
-             
+            %Calculates the rate of translation and rotation for all cells             
             [fT,fR] = calcFrictionTensors(obj.aCells,obj.uCells,f0);
             [fPar,~,~] = calcGeomFactors(obj.aCells);
+            
+            %I will provide three methods for calculating the potential
+            %between rods (the slowest part of the model). Option 1, the
+            %most speedy, is to use the graphics card to split the
+            %calculation between many workers. Option 2, less speedy, is
+            %to use a pre-compiled .mex file. Option 3, less speedy still,
+            %is to use Matlab's inbuilt functions. Try each option in turn,
+            %opting for the next if the necessary hardware/code is not
+            %available.
+            if obj.gpuAvailable
+                [gradXYZ,gradTheta,gradPhi] = calcPotentialGradsGPU(obj);
+            elseif obj.compiled
+                [gradXYZ,gradTheta,gradPhi] = calcPotentialGradsCompiled(obj);
+            else
+                [gradXYZ,gradTheta,gradPhi] = calcPotentialGradsBase(obj);
+            end
             
             drdt = zeros(size(obj.xCells,1),3);
             dthetadt = zeros(size(obj.xCells));
             dphidt = zeros(size(obj.xCells));
-            
-            boundX = obj.xWidth/2;
-            boundY = obj.yHeight/2;
-            boundZ = obj.zDepth/2;
-            Height = obj.yHeight;
-            Width = obj.xWidth;
-            Depth = obj.zDepth;
-            lam = obj.lam;
-            U0 = obj.U0;
-            
-            for i = 1:length(obj.nCells) %The index of the cell alpha.
-                %Get indices of cells that this cell (alpha) interacts with
-                betInds = find(includeMat(i,:));
-                xs = [obj.xCells;obj.xBarr]; xBets = xs(betInds);
-                ys = [obj.yCells;obj.yBarr]; yBets = ys(betInds);
-                zs = [obj.zCells;obj.zBarr]; zBets = zs(betInds);
-                ns = [obj.nCells;obj.nBarr]; nBets = ns(betInds);
-                ls = [obj.lCells;obj.lBarr]; lBets = ls(betInds);
-                thets = [obj.thetCells;obj.thetBarr]; thetBets = thets(betInds);
-                phis = [obj.phiCells;obj.phiBarr]; phiBets = phis(betInds);
                 
-                %Get dynamics
-
-                if length(obj.aCells) >= 1
-                    xAlph = obj.xCells(i);
-                    yAlph = obj.yCells(i);
-                    zAlph = obj.zCells(i);
-                    lAlph = obj.lCells(i);
-                    nAlph = obj.nCells(i);
-                    thetAlph = obj.thetCells(i);
-                    uAlph = obj.uCells(i,:)';
-                    phiAlph = obj.phiCells(i);
-                end
-                
-                if strcmp(obj.boundConds,'none')
-                    [dUdx,dUdy,dUdz,dUdthet,dUdphi] = mexCalcEnergyGradients(xBets,yBets,zBets,lBets,nBets,thetBets,phiBets,xAlph,yAlph,zAlph,lAlph,nAlph,thetAlph,phiAlph,U0,lam,boundX,boundY,Width,Height);
-                elseif strcmp(obj.boundConds,'periodic')
-                    [dUdx,dUdy,dUdz,dUdthet,dUdphi] = mexCalcEnergyGradientsPeriodic(xBets,yBets,zBets,lBets,nBets,thetBets,phiBets,xAlph,yAlph,zAlph,lAlph,nAlph,thetAlph,phiAlph,U0,lam,boundX,boundY,Width,Height);
-                end
-                
-                if sum(isnan(dUdx)) > 0
-                    disp('break')
-                end
-                
-                gradXY = -[sum(dUdx)/2,sum(dUdy)/2,sum(dUdz)/2];
-                gradTheta = -sum(dUdthet)/2;
-                gradPhi = -sum(dUdphi)/2;
-                
+            for i = 1:size(obj.xCells,1)
                 v0 = obj.fCells(i)/(f0*fPar(i)); %The self-propulsion velocity of a non-interacting SPR
+                uAlph = obj.uCells(i,:)'; %The unit vector representing the current orientation of the rod
                 
-                drdt(i,:) = (v0*uAlph - (fT(:,:,i)\gradXY'))';
+                drdt(i,:) = (v0*uAlph - (fT(:,:,i)\gradXYZ(i,:)'))';
                 drdt(i,3) = 0; %Set the z movement component to be 0 (so cells don't move out of the monolayer)
-                dthetadt(i) = -gradTheta/fR(i);
+                dthetadt(i) = -gradTheta(i)/fR(i);
                 if ~isinf(zElasticity) 
-                    dphidt(i) = -(gradPhi + (zElasticity/2) * (obj.aCells(i)^2) * cos(phiAlph) * sin(phiAlph))/fR(i); %We use a Kelvin-Voigt model, with gradPhi being taken as proportional to the stress term and strain proportional to the displacement of the cell from the neutral (phi = 0) position
+                    dphidt(i) = -(gradPhi(i) + (zElasticity/2) * (obj.aCells(i)^2) * cos(obj.phiCells(i)) * sin(obj.phiCells(i)))/fR(i); %We use a Kelvin-Voigt model, with gradPhi being taken as proportional to the stress term and strain proportional to the displacement of the cell from the neutral (phi = 0) position
                 else
                     dphidt(i) = 0;
                 end
@@ -486,7 +476,7 @@ classdef WensinkField
             obj.thetCells(reversingCells) = rem(obj.thetCells(reversingCells) + 2*pi,2*pi) - pi;
         end
         
-        function outImg = drawField(obj,posVec)
+        function outImg = drawField(obj)
             %Draws the current state of the model - location and angles of all rods in model. Coloured rods are motile cells.
             %Note that this is only a 2D projection for debugging. For proper imaging of the 3D system, use the paraview scripts.
             Upsample = 5; %Extent to which the 'design' image should be interpolated to create smoother graphics.

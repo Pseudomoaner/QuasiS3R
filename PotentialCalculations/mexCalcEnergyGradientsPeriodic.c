@@ -72,9 +72,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 betPos = (double)(betSeg) - ((double)(nBet-1)/2);
                 
                 xiAlph = xAlph + (lAlph * alphPos * cos(thetAlph) * cos(phiAlph));
-                xjBet = xBet + (lBet * betPos * cos(thetBet) * cos(phiAlph));
+                xjBet = xBet + (lBet * betPos * cos(thetBet) * cos(phiBet));
                 yiAlph = yAlph + (lAlph * alphPos * sin(thetAlph) * cos(phiAlph));
-                yjBet = yBet + (lBet * betPos * sin(thetBet) * cos(phiAlph));
+                yjBet = yBet + (lBet * betPos * sin(thetBet) * cos(phiBet));
                 ziAlph = zAlph + (lAlph * alphPos * sin(phiAlph));
                 zjBet = zBet + (lBet * betPos * sin(phiBet));
                 
