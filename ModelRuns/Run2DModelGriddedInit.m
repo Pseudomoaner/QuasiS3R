@@ -15,7 +15,6 @@ fieldSettings.fieldWidth = 200;
 fieldSettings.fieldHeight = 200;
 fieldSettings.maxX = fieldSettings.fieldWidth;
 fieldSettings.maxY = fieldSettings.fieldHeight;
-
 fieldSettings.fieldDepth = 10;
 fieldSettings.U0 = 250;
 fieldSettings.lam = 1.0;
