@@ -11,6 +11,12 @@ QuasiS3R will automatically generate a visualisation of the system at each sampl
 
 To prevent saving frames, simply set `dispSettings.saveFrames = false`.
 
+## Speeding up simulations by pre-compiling code
+
+One of the most time-consuming portions of the QuasiS3R model is calculation of the potential gradients acting on each rod, which confer the rod-rod steric interactions. To speed up this process, the QuasiS3R package includes a pair of .c files that perform these expesive operations (PotentialCalculations\mexCalcEnergyGradientsPeriodic.c and  PotentialCalculations\mexCalcEnergyGradients.c) that can be pre-compiled. To use them, simply follow [this guide](http://cs.smith.edu/~nhowe/370/Assign/mexfiles.html) to compiling .mex files. 
+
+Once you have compiled these functions, they should be saved as QuasiS3R\PotentialCalculations\mexCalcEnergyGradients.mexXXX and QuasiS3R\PotentialCalculations\mexCalcEnergyGradientsPeriodic.mexXXX (where XXX is an operating system specific extension). QuasiS3R will then automatically detect the compiled versions and use them in place of the equivalent .m functions.
+
 ## Applying custom confinement geometry
 
 To help build up complex geometries of spatial confinement, QuasiS3R includes the fieldDesigner utility. To use it, simply open the FieldDesigner.mlapp in Matlab. Ypon doing so, the follwing GUI should appear: 
