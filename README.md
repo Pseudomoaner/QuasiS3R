@@ -13,13 +13,13 @@ To prevent saving frames, simply set `dispSettings.saveFrames = false`.
 
 ## Speeding up simulations by pre-compiling code
 
-One of the most time-consuming portions of the QuasiS3R model is calculation of the potential gradients acting on each rod, which confer the rod-rod steric interactions. To speed up this process, the QuasiS3R package includes a pair of .c files that perform these expesive operations (PotentialCalculations\mexCalcEnergyGradientsPeriodic.c and  PotentialCalculations\mexCalcEnergyGradients.c) that can be pre-compiled. To use them, simply follow [this guide](http://cs.smith.edu/~nhowe/370/Assign/mexfiles.html) to compiling .mex files. 
+One of the most time-consuming portions of the QuasiS3R model is calculation of the potential gradients acting on each rod, which confer the rod-rod steric interactions. To speed up this process, the QuasiS3R package includes a pair of .c files that perform these expensive operations (PotentialCalculations\mexCalcEnergyGradientsPeriodic.c and  PotentialCalculations\mexCalcEnergyGradients.c) that can be pre-compiled. To use them, simply follow [this guide](http://cs.smith.edu/~nhowe/370/Assign/mexfiles.html) to compiling .mex files. 
 
 Once you have compiled these functions, they should be saved as QuasiS3R\PotentialCalculations\mexCalcEnergyGradients.mexXXX and QuasiS3R\PotentialCalculations\mexCalcEnergyGradientsPeriodic.mexXXX (where XXX is an operating system specific extension). QuasiS3R will then automatically detect the compiled versions and use them in place of the equivalent .m functions.
 
 ## Applying custom confinement geometry
 
-To help build up complex geometries of spatial confinement, QuasiS3R includes the fieldDesigner utility. To use it, simply open the FieldDesigner.mlapp in Matlab. Ypon doing so, the follwing GUI should appear: 
+To help build up complex geometries of spatial confinement, QuasiS3R includes the fieldDesigner utility. To use it, simply open the FieldDesigner.mlapp in Matlab. Upon doing so, the following GUI should appear: 
 
 ![fieldDesigner](https://raw.githubusercontent.com/Pseudomoaner/QuasiS3R/master/Graphics/fieldDesigner.PNG)
 
@@ -29,7 +29,7 @@ To build up the geometry of the confinement of your system, click on the **Drawi
 
 ![polygon selection](https://raw.githubusercontent.com/Pseudomoaner/QuasiS3R/master/Graphics/fieldDesignerHexagonSelect.PNG)
 
-You will now see your selected shape apper in the top right-hand corner:
+You will now see your selected shape appear in the top right-hand corner:
 
 ![polygon design](https://raw.githubusercontent.com/Pseudomoaner/QuasiS3R/master/Graphics/fieldDesignerHexagonEdit.PNG)
 
@@ -41,11 +41,11 @@ You can now click the **Add** or **Subtract** buttons to add or subtract the spe
 
 ![design window update](https://raw.githubusercontent.com/Pseudomoaner/QuasiS3R/master/Graphics/fieldDesignerHexagonGeometry.PNG)
 
-You can then repeatedly apply the drawing tools, adding and subtracting from the system geomtery as needed, until your system has the desired geometry:
+You can then repeatedly apply the drawing tools, adding and subtracting from the system geometry as needed, until your system has the desired geometry:
 
 ![complex design](https://raw.githubusercontent.com/Pseudomoaner/QuasiS3R/master/Graphics/fieldDesignerHexagonGeometry2.PNG)
 
-Once you're happy with your system geometry, slimply click File -> Save to save a configuration file with the specified system setup. You will now need to include the following code in your model initialization script:
+Once you're happy with your system geometry, simply click File -> Save to save a configuration file with the specified system setup. You will now need to include the following code in your model initialization script:
 
 ``` matlab
 load('Path\To\Configuration\File\fieldConfig.mat');
