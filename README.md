@@ -43,7 +43,7 @@ You can now click the **Add** or **Subtract** buttons to add or subtract the spe
 
 You can then repeatedly apply the drawing tools, adding and subtracting from the system geomtery as needed, until your system has the desired geometry:
 
-![complex design](https://raw.githubusercontent.com/Pseudomoaner/QuasiS3R/master/Graphics/fieldDesigner.PNG)
+![complex design](https://raw.githubusercontent.com/Pseudomoaner/QuasiS3R/master/Graphics/fieldDesignerHexagonGeometry2.PNG)
 
 Once you're happy with your system geometry, slimply click File -> Save to save a configuration file with the specified system setup. You will now need to include the following code in your model initialization script:
 
