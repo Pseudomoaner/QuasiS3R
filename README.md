@@ -1,5 +1,5 @@
 # QuasiS3R
-Quasi-3D SPR model, designed for simulation of bacterial motility in dense collectives confined to a single layer. Also allows simulation of 2D confinement, cell growth and division and periodic reversals in cell motility.
+Quasi-3D SPR (Self Propelled Rod) model, designed for simulation of bacterial motility in dense collectives confined to a single layer. Also allows simulation of 2D confinement, cell growth and division and periodic reversals in cell motility.
 
 ## Building up a simulation script
 
