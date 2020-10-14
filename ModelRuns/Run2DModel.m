@@ -25,9 +25,11 @@ fieldSettings.growthRate = 0.0; %Average increase in aspect ratio over one unit 
 fieldSettings.divThresh = 8; %Aspect ratio at which the cell should divide.
 fieldSettings.zElasticity = inf; %Elasticity of the overlying substrate. Set to inf if you want to maintain cells in the monolayer.
 fieldSettings.areaFrac = 0.35; %Fraction of the total area that should be occupied by cells.
+fieldSettings.boundaryConditions = 'periodic';
 
 %Choose your cell and barrier settings
 barrierSettingsType = 'none'; %Type of static barriers that should be present in simulation - either none or loaded
+barrierSettings = struct(); %Need to create a dummy variable to pass into the initialization function, even if you don't have any barriers in your system
 
 %Settings for the active rods - note that the use of the 'LatticedXYCells'
 %option means that all rods are assumed to be identical. Initialization can

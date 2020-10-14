@@ -66,6 +66,8 @@ barrierSettings.resUp = fieldConfig.resUp;
 
 This will automatically apply the settings defined using the fieldDesigner GUI to your model.
 
+![V-shaped obstacle](https://raw.githubusercontent.com/Pseudomoaner/QuasiS3R/master/Graphics/Vobstacle.PNG)
+
 Please note that the functionality associated with the fieldDesigner utility is somewhat untested, and may break your model.
 
 ## Contributors
