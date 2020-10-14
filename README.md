@@ -1,5 +1,5 @@
 # QuasiS3R
-Quasi-3D SPR model, designed for simulation of bacterial motility in dense collectives confined to a single layer. Also allows simulation of 2D confinement, cell growth and division and periodic reversals in cell motility.
+Quasi-3D SPR (Self Propelled Rod) model, designed for simulation of bacterial motility in dense collectives confined to a single layer. Also allows simulation of 2D confinement, cell growth and division and periodic reversals in cell motility.
 
 ## Building up a simulation script
 
@@ -66,7 +66,14 @@ barrierSettings.resUp = fieldConfig.resUp;
 
 This will automatically apply the settings defined using the fieldDesigner GUI to your model.
 
+![V-shaped obstacle](https://raw.githubusercontent.com/Pseudomoaner/QuasiS3R/master/Graphics/Vobstacle.PNG)
+
 Please note that the functionality associated with the fieldDesigner utility is somewhat untested, and may break your model.
+
+## Contributors
+
+- Oliver J. Meacock
+- William P. J. Smith
 
 ## References
 
