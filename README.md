@@ -68,6 +68,11 @@ This will automatically apply the settings defined using the fieldDesigner GUI t
 
 Please note that the functionality associated with the fieldDesigner utility is somewhat untested, and may break your model.
 
+## Contributors
+
+- Oliver J. Meacock
+- William P. J. Smith
+
 ## References
 
 - Wensink, H. H., & Löwen, H. (2012). Emergent states in dense systems of active rods: From swarming to turbulence. Journal of Physics Condensed Matter, 24(46). https://doi.org/10.1088/0953-8984/24/46/464130
