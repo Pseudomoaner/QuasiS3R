@@ -80,6 +80,7 @@ nAlphsG = gpuArray(nAlphs);
 lAlphsG = gpuArray(lAlphs);
 thetAlphsG = gpuArray(thetAlphs);
 phiAlphsG = gpuArray(phiAlphs);
+alphIndsG = gpuArray(alphInds);
 
 xBetsG = gpuArray(xBets);
 yBetsG = gpuArray(yBets);
@@ -108,23 +109,13 @@ elseif strcmp(inField.boundConds,'periodic')
 end
 
 %Finally, transfer data back to the CPU and add up potential contributions to each rod alpha
-dUdx = gather(dUdxG);
-dUdy = gather(dUdyG);
-dUdz = gather(dUdzG);
-dUdthet = gather(dUdthetG);
-dUdphi = gather(dUdphiG);
+gradXYZg = -[accumarray(alphIndsG,dUdxG),accumarray(alphIndsG,dUdyG),accumarray(alphIndsG,dUdzG)]/2;
+gradThetaG = -accumarray(alphIndsG,dUdthetG)/2;
+gradPhiG = -accumarray(alphIndsG,dUdphiG)/2;
 
-gradXYZ = zeros(length(inField.nCells),3);
-gradTheta = zeros(length(inField.nCells),1);
-gradPhi = zeros(length(inField.nCells),1);
-
-for i = 1:length(inField.nCells)
-    currInds = alphInds == i;
-    gradXYZ(i,:) = -[sum(dUdx(currInds)),sum(dUdy(currInds)),sum(dUdz(currInds))]/2;
-    gradTheta(i) = -sum(dUdthet(currInds))/2;
-    gradPhi(i) = -sum(dUdphi(currInds))/2;
-end
-
+gradXYZ = gather(gradXYZg);
+gradTheta = gather(gradThetaG);
+gradPhi = gather(gradPhiG);
 end
 
 function [dUdx,dUdy,dUdz,dUdthet,dUdphi] = gpuCalcEnergyGradientsPeriodic(xBet,yBet,zBet,lBet,nBet,thetBet,phiBet,xAlph,yAlph,zAlph,lAlph,nAlph,thetAlph,phiAlph,U0,lam,boundX,boundY,Width,Height)
@@ -145,9 +136,9 @@ function [dUdx,dUdy,dUdz,dUdthet,dUdphi] = gpuCalcEnergyGradientsPeriodic(xBet,y
             betPos = j - ((nBet+1)/2);
             
             xiAlph = xAlph + (lAlph * alphPos * cos(thetAlph) * cos(phiAlph));
-            xjBet = xBet + (lBet * betPos * cos(thetBet) * cos(phiAlph));
+            xjBet = xBet + (lBet * betPos * cos(thetBet) * cos(phiBet));
             yiAlph = yAlph + (lAlph * alphPos * sin(thetAlph) * cos(phiAlph));
-            yjBet = yBet + (lBet * betPos * sin(thetBet) * cos(phiAlph));
+            yjBet = yBet + (lBet * betPos * sin(thetBet) * cos(phiBet));
             ziAlph = zAlph + (lAlph * alphPos * sin(phiAlph));
             zjBet = zBet + (lBet * betPos * sin(phiBet));
             
@@ -179,10 +170,8 @@ function [dUdx,dUdy,dUdz,dUdthet,dUdphi] = gpuCalcEnergyGradientsPeriodic(xBet,y
             drdy = invR*y;
             drdz = invR*z;
             
-            yTerm = lAlph*cos(thetAlph)*alphPos*y;
-            xTerm = lAlph*sin(thetAlph)*alphPos*x;
-            drdthet = invR.*(yTerm - xTerm);
-            drdphi = invR*lAlph*alphPos*(cos(phiAlph)*z - cos(thetAlph)*sin(phiAlph)*x - sin(thetAlph)*sin(phiAlph)*y);
+            drdthet = cos(phiAlph)*lAlph*alphPos*invR*(cos(thetAlph)*y - sin(thetAlph)*x);
+            drdphi = invR*lAlph*alphPos*(cos(phiAlph)*z - cos(thetAlph)*sin(phiAlph)*x - sin(thetAlph)*sin(phiAlph)*y); 
             
             postFac = (exp(-r/lam) * (lam + r)) / (lam * r^2);
             
@@ -214,9 +203,9 @@ function [dUdx,dUdy,dUdz,dUdthet,dUdphi] = gpuCalcEnergyGradients(xBet,yBet,zBet
             betPos = j - ((nBet+1)/2);
             
             xiAlph = xAlph + (lAlph * alphPos * cos(thetAlph) * cos(phiAlph));
-            xjBet = xBet + (lBet * betPos * cos(thetBet) * cos(phiAlph));
+            xjBet = xBet + (lBet * betPos * cos(thetBet) * cos(phiBet));
             yiAlph = yAlph + (lAlph * alphPos * sin(thetAlph) * cos(phiAlph));
-            yjBet = yBet + (lBet * betPos * sin(thetBet) * cos(phiAlph));
+            yjBet = yBet + (lBet * betPos * sin(thetBet) * cos(phiBet));
             ziAlph = zAlph + (lAlph * alphPos * sin(phiAlph));
             zjBet = zBet + (lBet * betPos * sin(phiBet));
             
@@ -231,9 +220,7 @@ function [dUdx,dUdy,dUdz,dUdthet,dUdphi] = gpuCalcEnergyGradients(xBet,yBet,zBet
             drdy = invR*y;
             drdz = invR*z;
             
-            yTerm = lAlph*cos(thetAlph)*alphPos*y;
-            xTerm = lAlph*sin(thetAlph)*alphPos*x;
-            drdthet = invR.*(yTerm - xTerm);
+            drdthet = cos(phiAlph)*lAlph*alphPos*invR*(cos(thetAlph)*y - sin(thetAlph)*x);
             drdphi = invR*lAlph*alphPos*(cos(phiAlph)*z - cos(thetAlph)*sin(phiAlph)*x - sin(thetAlph)*sin(phiAlph)*y);
             
             postFac = (exp(-r/lam) * (lam + r)) / (lam * r^2);

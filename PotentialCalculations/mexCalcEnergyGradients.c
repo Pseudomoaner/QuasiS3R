@@ -62,6 +62,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         lBet = lBets[bet];
         nBet = nBets[bet];
         thetBet = thetBets[bet];
+        phiBet = phiBets[bet];
         
         preFac = U0/(nAlph * nBet);
         

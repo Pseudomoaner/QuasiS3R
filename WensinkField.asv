@@ -130,24 +130,24 @@ classdef WensinkField
                     obj.rCells = cellSettings.r * ones(size(obj.xCells));
                     obj.cCells = rand(size(obj.xCells,1),3);
                 case 'LatticedXYCellsTwoPops' %Start with an initially ordered lattice of cells (with random up/down orientations)
-                    obj = obj.overlayLattice(areaFrac,cellSettings.a1);
+                    obj = obj.overlayLattice(areaFrac,cellSettings.a);
                     obj.zCells = ones(size(obj.xCells)) * obj.zDepth/2;
                     obj.phiCells = abs(randn(size(obj.xCells)))*0.001;
                     
                     %Create randomised initial population mix
-                    type = zeros(size(obj.xCells,1),1);
-                    type(1:round(cellSettings.popFrac*size(obj.xCells,1))) = 1;
-                    type = logical(type(randperm(size(obj.xCells,1))));
-                    obj.aCells = zeros(size(obj.xCells,1),1);
-                    obj.fCells = zeros(size(obj.xCells,1),1);
-                    obj.rCells = zeros(size(obj.xCells,1),1);
+                    type = zeros(noCells,1);
+                    type(1:round(cellSettings.typeProportion*noCells)) = 1;
+                    type = logical(type(randperm(noCells)));
+                    obj.aCells = zeros(noCells,1);
+                    obj.fCells = zeros(noCells,1);
+                    obj.rCells = zeros(noCells,1);
                     obj.aCells(type) = cellSettings.a1 * ones(sum(type),1);
                     obj.fCells(type) = cellSettings.f1 * ones(sum(type),1);
                     obj.rCells(type) = cellSettings.r1 * ones(sum(type),1);
-                    obj.aCells(~type) = cellSettings.a2 * ones(size(obj.xCells,1) - sum(type),1);
-                    obj.fCells(~type) = cellSettings.f2 * ones(size(obj.xCells,1) - sum(type),1);
-                    obj.rCells(~type) = cellSettings.r2 * ones(size(obj.xCells,1) - sum(type),1);
-                    obj.cCells = rand(size(obj.xCells,1),3);
+                    obj.aCells(~type) = cellSettings.a2 * ones(noCells - sum(type),1);
+                    obj.fCells(~type) = cellSettings.f2 * ones(noCells - sum(type),1);
+                    obj.rCells(~type) = cellSettings.r2 * ones(noCells - sum(type),1);
+                    obj.cCells = rand(noCells,3);
             end
             
             [obj.nCells,obj.lCells] = calculateSegmentNumberLength(obj.aCells,obj.lam);
