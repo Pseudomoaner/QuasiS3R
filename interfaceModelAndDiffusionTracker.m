@@ -6,9 +6,7 @@ if isempty(TrackableData)
 end
 
 TrackableData.Length{FrameNo} = Field.aCells;
-oriTmp = rad2deg(Field.thetCells);
-oriTmp(oriTmp < -90) = oriTmp(oriTmp < -90) + 180;
-oriTmp(oriTmp > 90) = oriTmp(oriTmp >90) + 180;
-TrackableData.Orientation{FrameNo} = oriTmp;
-TrackableData.Centroid{FrameNo} = [Field.xCells,Field.yCells];
+TrackableData.Orientation{FrameNo} = Field.thetCells;
+TrackableData.Centroid{FrameNo} = [Field.xCells,Field.yCells,Field.zCells];
 TrackableData.Tilt{FrameNo} = Field.phiCells;
+TrackableData.Force{FrameNo} = Field.fCells;
