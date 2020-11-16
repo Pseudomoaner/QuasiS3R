@@ -9,11 +9,11 @@ PCs.Force = PCs.Force(pS.startTime:end);
 %Build tracks
 [Tracks,Initials] = buildModelPCsTracks(PCs,fS);
 
-[OrientationTracks,trackTimes,toMappings,fromMappings] = extractDataTrack(Tracks,Initials,PCs.Orientation);
-LengthTracks = extractDataTrack(Tracks,Initials,PCs.Length);
-CentroidTracks = extractDataTrack(Tracks,Initials,PCs.Centroid);
-TiltTracks = extractDataTrack(Tracks,Initials,PCs.Tilt);
-ForceTracks = extractDataTrack(Tracks,Initials,PCs.Force);
+[OrientationTracks,trackTimes,toMappings,fromMappings] = extractModelDataTrack(Tracks,Initials,PCs.Orientation);
+LengthTracks = extractModelDataTrack(Tracks,Initials,PCs.Length);
+CentroidTracks = extractModelDataTrack(Tracks,Initials,PCs.Centroid);
+TiltTracks = extractModelDataTrack(Tracks,Initials,PCs.Tilt);
+ForceTracks = extractModelDataTrack(Tracks,Initials,PCs.Force);
 
 disp('Tracked...')
 
@@ -23,7 +23,7 @@ UndriftCentroids = stabilizeTracks(CentroidTracks,trackTimes,1);
 disp('Undrifted...')
 
 %Velocity computations
-[RawSpeed,RawPhi,SmoothSpeed,SmoothPhi] = getAllVelocities(CentroidTracks,trackTimes,pS.velocitySmoothingSize,fS.dt);
+[RawSpeed,RawPhi,SmoothSpeed,SmoothPhi] = getModelVelocities(CentroidTracks,trackTimes,pS.velocitySmoothingSize,fS.dt);
 
 disp('Velocities found...')
 

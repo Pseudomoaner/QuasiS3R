@@ -1,4 +1,4 @@
-function [dataTracks,trackTimes,toMappings,fromMappings] = extractDataTrack(Track,Initials,data)
+function [dataTracks,trackTimes,toMappings,fromMappings] = extractModelDataTrack(Track,Initials,data)
 
 trackCount = 1;
 dataTracks = {};

@@ -130,7 +130,7 @@ classdef WensinkField
                     obj.rCells = cellSettings.r * ones(size(obj.xCells));
                     obj.cCells = rand(size(obj.xCells,1),3);
                 case 'LatticedXYCellsTwoPops' %Start with an initially ordered lattice of cells (with random up/down orientations)
-                    obj = obj.overlayLattice(areaFrac,cellSettings.a1);
+                    obj = obj.overlayLattice(areaFrac,cellSettings.a1); %Because of the way overlayLattice works, ensure that a1 is larger than or equal to a2.
                     obj.zCells = ones(size(obj.xCells)) * obj.zDepth/2;
                     obj.phiCells = abs(randn(size(obj.xCells)))*0.001;
                     
@@ -141,13 +141,15 @@ classdef WensinkField
                     obj.aCells = zeros(size(obj.xCells,1),1);
                     obj.fCells = zeros(size(obj.xCells,1),1);
                     obj.rCells = zeros(size(obj.xCells,1),1);
+                    obj.cCells = zeros(size(obj.xCells,1),3);
                     obj.aCells(type) = cellSettings.a1 * ones(sum(type),1);
                     obj.fCells(type) = cellSettings.f1 * ones(sum(type),1);
                     obj.rCells(type) = cellSettings.r1 * ones(sum(type),1);
+                    obj.cCells(type,:) = repmat(cellSettings.c1,sum(type),1);
                     obj.aCells(~type) = cellSettings.a2 * ones(size(obj.xCells,1) - sum(type),1);
                     obj.fCells(~type) = cellSettings.f2 * ones(size(obj.xCells,1) - sum(type),1);
                     obj.rCells(~type) = cellSettings.r2 * ones(size(obj.xCells,1) - sum(type),1);
-                    obj.cCells = rand(size(obj.xCells,1),3);
+                    obj.cCells(~type,:) = repmat(cellSettings.c2,sum(~type),1);
             end
             
             [obj.nCells,obj.lCells] = calculateSegmentNumberLength(obj.aCells,obj.lam);
@@ -158,7 +160,7 @@ classdef WensinkField
             %Overlays a lattice of rods on top of the region defined by the
             %design image, and adjusts density until it matches the desired
             %area fraction. Assumes all rods are identical in size.
-            totArea = sum(~obj.boundaryDesign(:))/(obj.resUp^2);
+            totArea = (obj.xWidth * obj.yHeight) - (sum(obj.boundaryDesign(:))/(obj.resUp^2));
             singleArea = (obj.lam^2 * (aspRat - 1)) + (pi * (obj.lam/2)^2);
             
             tgtRodNo = round(totArea*areaFrac/singleArea);
@@ -221,7 +223,7 @@ classdef WensinkField
             arCritCells = (pi * obj.lam^2)./(4*sin(obj.phiCells(critCells)));
             arSubCritCells = (obj.lam^2 * (obj.aCells(~critCells) - 1)) + (pi * (obj.lam/2)^2);
             
-            totArea = sum(~obj.boundaryDesign(:))/(obj.resUp^2);
+            totArea = (obj.xWidth * obj.yHeight) - (sum(obj.boundaryDesign(:))/(obj.resUp^2));
             areaFrac = sum([arCritCells; arSubCritCells])/totArea;
         end
         
@@ -458,7 +460,7 @@ classdef WensinkField
             end
             
             %Invert the movement direction of any cells regarded to have reversed.
-            obj = obj.randomReverse();
+            obj = obj.randomReverse(timeStep);
             
             obj = obj.setColours(colourCells);
             
@@ -489,9 +491,9 @@ classdef WensinkField
             obj.uCells = [cos(obj.thetCells).*cos(obj.phiCells),sin(obj.thetCells).*cos(obj.phiCells),sin(obj.phiCells)];
         end
         
-        function obj = randomReverse(obj)
+        function obj = randomReverse(obj,timeStep)
             %Reverse rate is the probability of a given cell reversing in a single time step. Results in a Binomial distribution of reversal events for a given cell (?).
-            reversingCells = obj.rCells > rand(size(obj.rCells));
+            reversingCells = obj.rCells > rand(size(obj.rCells))*timeStep;
             obj.thetCells(reversingCells) = rem(obj.thetCells(reversingCells) + 2*pi,2*pi) - pi;
         end
         
@@ -499,7 +501,7 @@ classdef WensinkField
             %Draws the current state of the model - location and angles of all rods in model. Coloured rods are motile cells.
             %Note that this is only a 2D projection for debugging. For proper imaging of the 3D system, use the paraview scripts.
             Upsample = 20; %Extent to which the 'design' image should be interpolated to create smoother graphics.
-            Downsample = 1; %Extent to which the final image should be scaled down to save space.
+            Downsample = 5; %Extent to which the final image should be scaled down to save space.
             fullSF = Upsample * obj.resUp; %Extent to which the ellipse images should be blown up.
             
 %             hand = figure(1);

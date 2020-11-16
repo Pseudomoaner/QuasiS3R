@@ -36,7 +36,7 @@ barrierSettings = struct(); %Need to create a dummy variable to pass into the in
 %be customized by writing additional code in the WensinkField.populateField
 %function.
 cellSettingsType = 'LatticedXYCells'; %Type of rod initialization conditions that should be applied - either singleCell, doubleCell or LatticedXYCells
-cellSettings.a = 6; %Aspect ratio of rods (relative to fieldSettings.lam)
+cellSettings.a = 5; %Aspect ratio of rods (relative to fieldSettings.lam)
 cellSettings.f = 1; %Pushing force applied by each rod
 cellSettings.r = 0; %Reversal rate associated with each rod
 
@@ -104,4 +104,4 @@ fieldSettings.maxF = round(fieldSettings.motileSteps/fieldSettings.FrameSkip);
 [data,trackableData,toMappings,fromMappings] = processModelPCs(PCs,procSettings,fieldSettings);
 
 fullMatOut = [RootSim,filesep,outputMatName];
-save(fullMatOut)
+save(fullMatOut,'data','trackableData','toMappings','fromMappings','fieldSettings','cellSettings','procSettings','samplingRate','startMotileDt')
