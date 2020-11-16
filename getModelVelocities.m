@@ -1,4 +1,4 @@
-function [RawSpeed,RawPhi,SmoothSpeed,SmoothPhi] = getAllVelocities(Centroids,Times,smoothingSpan,tStep) %Calculates the raw velocities of all cells in sufficiently long tracks.
+function [RawSpeed,RawPhi,SmoothSpeed,SmoothPhi] = getModelVelocities(Centroids,Times,smoothingSpan,tStep) %Calculates the raw velocities of all cells in sufficiently long tracks.
 
 RawSpeed = cell(size(Centroids));
 RawPhi = cell(size(Centroids));
