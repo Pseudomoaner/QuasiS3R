@@ -79,4 +79,4 @@ Please note that the functionality associated with the fieldDesigner utility is 
 
 - Wensink, H. H., & Löwen, H. (2012). Emergent states in dense systems of active rods: From swarming to turbulence. Journal of Physics Condensed Matter, 24(46). https://doi.org/10.1088/0953-8984/24/46/464130
 - Lowen, H., Dunkel, J., Heidenreich, S., Goldstein, R. E., Yeomans, J. M., Wensink, H. H., & Drescher, K. (2012). Meso-scale turbulence in living fluids. Proceedings of the National Academy of Sciences, 109(36), 14308–14313. https://doi.org/10.1073/pnas.1202032109
-- Meacock, O. J., Doostmohammadi, A., Foster, K., Yeomans, J. M., Durham, W. M. (2020). Bacteria solve the problem of crowding by moving slowly. arXiv:2008.07915
+- Meacock, O.J., Doostmohammadi, A., Foster, K.R. et al (2020). Bacteria solve the problem of crowding by moving slowly. Nature Physics https://doi.org/10.1038/s41567-020-01070-6
