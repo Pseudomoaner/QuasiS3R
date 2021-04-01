@@ -35,7 +35,7 @@ barrierSettings = struct(); %Need to create a dummy variable to pass into the in
 %option means that all rods are assumed to be identical. Initialization can
 %be customized by writing additional code in the WensinkField.populateField
 %function.
-cellSettingsType = 'LatticedXYCells'; %Type of rod initialization conditions that should be applied - either singleCell, doubleCell or LatticedXYCells
+cellSettingsType = 'LatticedXYCellsNoBarrier'; %Type of rod initialization conditions that should be applied - either singleCell, doubleCell or LatticedXYCells
 cellSettings.a = 5; %Aspect ratio of rods (relative to fieldSettings.lam)
 cellSettings.f = 1; %Pushing force applied by each rod
 cellSettings.r = 0; %Reversal rate associated with each rod
@@ -44,7 +44,7 @@ cellSettings.r = 0; %Reversal rate associated with each rod
 dispSettings.saveFrames = true; %Whether or not to save visualisations of each sampled timepoint
 dispSettings.ImgPath = 'Frame_%04d.tif'; %Generic name for each output frame (will be fed into sprintf, so use appropriate string formatting)
 dispSettings.colourCells = 'None'; %How rods should be recoloured at each sampling point. If set to 'None', will retain any previously set colour.
-dispSettings.saveType = 'plot'; %Type of method used to visualise rods - either 'plot' or 'draw'. 'plot' will produce and save a Matlab figure, while 'draw' will draw ellipses directly into an image.
+dispSettings.saveType = 'draw'; %Type of method used to visualise rods - either 'plot' or 'draw'. 'plot' will produce and save a Matlab figure, while 'draw' will draw ellipses directly into an image.
 dispSettings.posVec = [100,100,round(900/sqrt(2)),900]; %Determines the location of the plotting figure - only needs to be set if dispSettings.saveType == 'plot'.
 dispSettings.imagedirectory = [RootSim,filesep,'ColourCells']; %Defines where the output images will be located
 if ~exist(dispSettings.imagedirectory,'dir') %Set up visualisation directory
@@ -59,8 +59,8 @@ procSettings.pixSize = 0.2; %In the same units as lam. Value is defined by the s
 
 %Global simulation settings (defined separately from e.g. field settings so
 %they can easily applied uniformly during parameter sweeps).
-startMotileDt = 0.1; %Size of the timestep (to begin with)
-samplingRate = 5.0; %How frequently samples of the simulation should be taken
+startMotileDt = 0.0625; %Size of the timestep (to begin with)
+samplingRate = 1.0; %How frequently samples of the simulation should be taken
 settlingSimTime = 0; %How long it will take for the simulation to settle into an active configuration
 targetSimTime = 50; %Target motile simulation time
 

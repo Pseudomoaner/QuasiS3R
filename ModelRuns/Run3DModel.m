@@ -44,6 +44,8 @@ cellSettings.f1 = 1.5; %Pushing force applied by each rod
 cellSettings.f2 = 5;
 cellSettings.r1 = 0; %Reversal rate associated with each rod
 cellSettings.r2 = 0;
+cellSettings.c1 = [1,1,0];
+cellSettings.c2 = [0,1,1];
 
 %Output settings
 dispSettings.saveFrames = false; %Whether or not to save visualisations of each sampled timepoint
@@ -60,12 +62,11 @@ procSettings.pixSize = 0.2; %In the same units as lam. Value is defined by the s
 startMotileDt = 0.1; %Size of the timestep (to begin with)
 samplingRate = 5.0; %How frequently samples of the simulation should be taken
 settlingSimTime = 300; %How long it will take for the simulation to settle into an active configuration
-targetSimTime = 1000; %Target motile simulation time
+targetSimTime = 600; %Target motile simulation time
 
 %% Part 0: Initialize field for this simulation
 startField = WensinkField(fieldSettings.fieldWidth,fieldSettings.fieldHeight,fieldSettings.fieldDepth,fieldSettings.U0,fieldSettings.lam,fieldSettings.boundaryConditions);
 startField = startField.populateField(barrierSettingsType,barrierSettings,cellSettingsType,cellSettings,fieldSettings.areaFrac);
-startField = startField.setColours('Position');
 
 %% Part 1: Make sure that the selected value of motiledt doesn't make the simulation explode, or reduce until you reach numerical stability
 
