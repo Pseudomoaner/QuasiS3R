@@ -203,13 +203,13 @@ classdef WensinkField
                     obj.fCells(type) = cellSettings.f1 * ones(sum(type),1);
                     obj.rCells(type) = cellSettings.r1 * ones(sum(type),1);
                     obj.cCells(type,:) = repmat(cellSettings.c1,sum(type),1);
-                    obj.popCells(type,:) = cellSettings.pop1;
+                    obj.popCells(type) = cellSettings.pop1;
                     obj.fireCells(type) = cellSettings.fire1 * ones(sum(type),1);
                     obj.aCells(~type) = cellSettings.a2 * ones(size(obj.xCells,1) - sum(type),1);
                     obj.fCells(~type) = cellSettings.f2 * ones(size(obj.xCells,1) - sum(type),1);
                     obj.rCells(~type) = cellSettings.r2 * ones(size(obj.xCells,1) - sum(type),1);
                     obj.cCells(~type,:) = repmat(cellSettings.c2,sum(~type),1);
-                    obj.popCells(type,:) = cellSettings.pop2;
+                    obj.popCells(~type) = cellSettings.pop2;
                     obj.fireCells(~type) = cellSettings.fire2 * ones(sum(~type),1);
             end
             
