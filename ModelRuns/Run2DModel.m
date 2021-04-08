@@ -21,6 +21,9 @@ fieldSettings.lam = 1.0; %Screening length, defining the interaction distance be
 fieldSettings.f0 = 1; %Stokesian friction coefficient
 fieldSettings.colJigRate = 0.0; %How quickly colours should 'jiggle' noisily (in HSV space). Values above 0 can be useful for visualising lineages of dividing cells. 
 fieldSettings.postDivMovement = 'reverse'; %How the daughter cell should move following cell division. Either 'reverse' (the opposite direction to the mother) or 'same' (the same direction as the mother).
+fieldSettings.fireRange = 2; %Range of the CDI system
+fieldSettings.killType = 'husk'; %Whether to remove cells from simulation after death ('lyse') or inactivate them, but leave their bodies ('husk')
+fieldSettings.killThresh = 4; %Number of hits needed to kill a cell
 fieldSettings.growthRate = 0.0; %Average increase in aspect ratio over one unit of time.
 fieldSettings.divThresh = 8; %Aspect ratio at which the cell should divide.
 fieldSettings.zElasticity = inf; %Elasticity of the overlying substrate. Set to inf if you want to maintain cells in the monolayer.
@@ -39,6 +42,8 @@ cellSettingsType = 'LatticedXYCellsNoBarrier'; %Type of rod initialization condi
 cellSettings.a = 5; %Aspect ratio of rods (relative to fieldSettings.lam)
 cellSettings.f = 1; %Pushing force applied by each rod
 cellSettings.r = 0; %Reversal rate associated with each rod
+cellSettings.pop = 's'; %Population label of cells
+cellSettings.fire = 0; %Firing rate of cells
 
 %Output settings
 dispSettings.saveFrames = true; %Whether or not to save visualisations of each sampled timepoint
@@ -59,7 +64,9 @@ procSettings.pixSize = 0.2; %In the same units as lam. Value is defined by the s
 
 %Global simulation settings (defined separately from e.g. field settings so
 %they can easily applied uniformly during parameter sweeps).
+burnInDt = 0.0625;
 startMotileDt = 0.0625; %Size of the timestep (to begin with)
+firingDt = 1; %Size of the timestep for calculating firing events
 samplingRate = 1.0; %How frequently samples of the simulation should be taken
 settlingSimTime = 0; %How long it will take for the simulation to settle into an active configuration
 targetSimTime = 50; %Target motile simulation time
@@ -88,6 +95,7 @@ while ~simOK %Repeatedly reduce simulation step size if needed
 end
 fieldSettings.motiledt = tmpFieldSettings.motiledt;
 fieldSettings.FrameSkip = round(samplingRate/fieldSettings.motiledt);
+fieldSettings.FireSkip = round(firingDt/fieldSettings.motiledt);
 
 %% Part 2: Do initial simulation to allow system to reach an active configuration
 fieldSettings.motileSteps = ceil(settlingSimTime/(fieldSettings.motiledt*fieldSettings.FrameSkip))*fieldSettings.FrameSkip;

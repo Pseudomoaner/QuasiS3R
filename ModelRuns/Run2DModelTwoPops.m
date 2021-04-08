@@ -11,8 +11,8 @@ reconstructionRootName = 'Channel_1';
 outputMatName = 'SimulationResults.mat';
 
 %Settings applied to entire field
-fieldSettings.fieldWidth = 200; %Width of the simulated domain (in units of fieldSettings.lam)
-fieldSettings.fieldHeight = 200; %Height of the simulated domain (in units of fieldSettings.lam)
+fieldSettings.fieldWidth = 50; %Width of the simulated domain (in units of fieldSettings.lam)
+fieldSettings.fieldHeight = 50; %Height of the simulated domain (in units of fieldSettings.lam)
 fieldSettings.maxX = fieldSettings.fieldWidth;
 fieldSettings.maxY = fieldSettings.fieldHeight;
 fieldSettings.fieldDepth = 10; %Depth of the simulated domain. Value is not critical, provided it is somewhat greater than the length of the longest rod in the simulation
@@ -21,6 +21,9 @@ fieldSettings.lam = 1.0; %Screening length, defining the interaction distance be
 fieldSettings.f0 = 1; %Stokesian friction coefficient
 fieldSettings.colJigRate = 0.0; %How quickly colours should 'jiggle' noisily (in HSV space). Values above 0 can be useful for visualising lineages of dividing cells. 
 fieldSettings.postDivMovement = 'reverse'; %How the daughter cell should move following cell division. Either 'reverse' (the opposite direction to the mother) or 'same' (the same direction as the mother).
+fieldSettings.fireRange = 2; %Range of the CDI system
+fieldSettings.killType = 'husk'; %Whether to remove cells from simulation after death ('lyse') or inactivate them, but leave their bodies ('husk')
+fieldSettings.killThresh = 4; %Number of hits needed to kill a cell
 fieldSettings.growthRate = 0.0; %Average increase in aspect ratio over one unit of time.
 fieldSettings.divThresh = 8; %Aspect ratio at which the cell should divide.
 fieldSettings.zElasticity = inf; %Elasticity of the overlying substrate. Set to inf if you want to maintain cells in the monolayer.
@@ -38,18 +41,22 @@ barrierSettings = struct(); %Need to create a dummy variable to pass into the in
 cellSettingsType = 'LatticedXYCellsTwoPops'; %Type of rod initialization conditions that should be applied - either singleCell, doubleCell or LatticedXYCells
 cellSettings.popFrac = 0.01;
 cellSettings.a1 = 6; %Aspect ratio of rods (relative to fieldSettings.lam)
-cellSettings.f1 = 1; %Pushing force applied by each rod
+cellSettings.f1 = 1.5; %Pushing force applied by each rod
 cellSettings.r1 = 0; %Reversal rate associated with each rod
 cellSettings.c1 = [1,0,0]; %RGB values for the colour you want to make the cells of population 1
-cellSettings.a2 = 1.01;
-cellSettings.f2 = 0;
+cellSettings.fire1 = 0; %Firing rate of CDI system for this population
+cellSettings.pop1 = 's'; %Population label to specify which cells can kill each other.
+cellSettings.a2 = 1.5;
+cellSettings.f2 = 1;
 cellSettings.r2 = 0;
 cellSettings.c2 = [0,0.5,1];
+cellSettings.fire2 = 0;
+cellSettings.pop2 = 's';
 
 %Output settings
 dispSettings.saveFrames = true; %Whether or not to save visualisations of each sampled timepoint
 dispSettings.ImgPath = 'Frame_%04d.tif'; %Generic name for each output frame (will be fed into sprintf, so use appropriate string formatting)
-dispSettings.colourCells = 'None'; %How rods should be recoloured at each sampling point. If set to 'None', will retain any previously set colour.
+dispSettings.colourCells = 'Hits'; %How rods should be recoloured at each sampling point. If set to 'None', will retain any previously set colour.
 dispSettings.saveType = 'draw'; %Type of method used to visualise rods - either 'plot' or 'draw'. 'plot' will produce and save a Matlab figure, while 'draw' will draw ellipses directly into an image.
 dispSettings.posVec = [100,100,round(900/sqrt(2)),900]; %Determines the location of the plotting figure - only needs to be set if dispSettings.saveType == 'plot'.
 dispSettings.imagedirectory = [RootSim,filesep,'ColourCells']; %Defines where the output images will be located
@@ -70,9 +77,10 @@ procSettings.tgtDensity = 1e-3; %Normalized displacement space distance threshol
 %Global simulation settings (defined separately from e.g. field settings so
 %they can easily applied uniformly during parameter sweeps).
 burnInDt = 0.0625;
-startMotileDt = 0.2; %Size of the timestep (to begin with)
+startMotileDt = 0.1; %Size of the motility timestep (to begin with)
+firingDt = 1; %Size of the timestep for calculating firing events
 samplingRate = 5.0; %How frequently samples of the simulation should be taken
-burnInSimTime = 10;
+burnInSimTime = 0;
 settlingSimTime = 200; %How long it will take for the simulation to settle into an active configuration
 targetSimTime = 1000; %Target motile simulation time
 
@@ -106,6 +114,7 @@ while ~simOK %Repeatedly reduce simulation step size if needed
 end
 fieldSettings.motiledt = tmpFieldSettings.motiledt;
 fieldSettings.FrameSkip = round(samplingRate/fieldSettings.motiledt);
+fieldSettings.FireSkip = round(firingDt/fieldSettings.motiledt);
 
 %% Part 2: Do initial simulation to allow system to reach an active configuration
 fieldSettings.motileSteps = ceil(settlingSimTime/(fieldSettings.motiledt*fieldSettings.FrameSkip))*fieldSettings.FrameSkip;
