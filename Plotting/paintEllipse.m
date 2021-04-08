@@ -52,7 +52,7 @@ for i = 1:size(xs,1)
     maxXbig = xPx + fullWindow - 1;
     minYbig = yPx;
     maxYbig = yPx + fullWindow - 1;
-    
+
     if strcmp(boundaryConds,'periodic')
         %Don't need to worry about rods that are outside the actual field,
         %as the periodic boundary conditions will move them back in.

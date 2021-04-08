@@ -41,7 +41,7 @@
 
 
 
-function [NormXmhalfDefectVertexToEdgeVect,NormYmhalfDefectVertexToEdgeVect]=GetmhalfDefectOrientation(xphdcentre,yphdcentre,NemAngleListCW,XPositionNemList,YPositionNemList)
+function nHalfDefOri = GetmhalfDefectOrientation(xphdcentre,yphdcentre,NemAngleListCW,XPositionNemList,YPositionNemList)
 dum=size(NemAngleListCW);
 oppositeGpInterval = round(dum(1,1)/2);
 
@@ -84,5 +84,7 @@ NormVertexToEdgeVect=[xphdcentre-xtail;yphdcentre-ytail]/sqrt((xphdcentre-xtail)
 NormXmhalfDefectVertexToEdgeVect=NormVertexToEdgeVect(1,1);
 NormYmhalfDefectVertexToEdgeVect=NormVertexToEdgeVect(2,1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+nHalfDefOri = atan2d(NormYmhalfDefectVertexToEdgeVect,NormXmhalfDefectVertexToEdgeVect);
 end
 

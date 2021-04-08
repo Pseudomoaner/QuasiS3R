@@ -5,7 +5,7 @@ for t = 1:size(pDorientation,2)
     %Each row of pDposition{t} and nDposition{t} contains the (x,y) coordinates of a single defect
     trackableData.Centroid{t} = [pDposition{t};nDposition{t}];
     %Similarly for defect orientation:
-    trackableData.Orientation{t} = [pDorientation{t};nDorientation{t}]; 
+    trackableData.Orientation{t} = [pDorientation{t}/2;(3*nDorientation{t})/2]; %Need to adjust orientations so they vary between -90 and 90 degrees to interface with FAST (will remove transformation later) 
     %SpareFeat1 contains the defect charge information. Additional features MUST be called SpareFeat1, SpareFeat2 etc. in the trackable data structure to be read by the tracking module
     trackableData.SpareFeat1{t} = [ones(size(pDposition{t},1),1);-ones(size(nDposition{t},1),1)]; 
 end
@@ -68,8 +68,11 @@ end
 for i = 1:size(procDefTracks,2)
     if mean(procDefTracks(i).sparefeat1) == 1
         procDefTracks(i).population = 1;
+        procDefTracks(i).phi = procDefTracks(i).phi*2; %Reverse the transformation you applied in line 8
     elseif mean(procDefTracks(i).sparefeat1) == -1
         procDefTracks(i).population = 2;
+        procDefTracks(i).phi = procDefTracks(i).phi*2/3;
+        procDefTracks(i).phi = procDefTracks(i).phi + (floor(rand(size(procDefTracks(i).phi))*3)-1)*120;
     else %If topological charge of tracked defect is mixed, mark as the anonymous population 3.
         procDefTracks(i).population = 3;
     end

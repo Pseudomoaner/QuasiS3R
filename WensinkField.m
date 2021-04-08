@@ -16,6 +16,9 @@ classdef WensinkField
         fCells %Likewise for the extra force added in the direction of motion (The 'self propelled' bit)
         rCells %Likewise for the reversal rate of each cell (probability of reversal in a single time unit)
         cCells %Likewise for color vector of cells.
+        hitCells %Likewise for number of hits each cell has experienced
+        fireCells %Likewise for firing rate of each cell
+        popCells %Likewise for population label for each cell
         
         xBarr %x position for the barrier rods (non-motile, but still cause steric effects)
         yBarr
@@ -111,6 +114,9 @@ classdef WensinkField
                     obj.fCells = cellSettings.f;
                     obj.rCells = cellSettings.r;
                     obj.cCells = [1,0,0];
+                    obj.hitCells = 0;
+                    obj.popCells = 's';
+                    obj.fireCells = cellSettings.fire;
                 case 'doubleCell'
                     obj.xCells = [obj.xWidth/2+1;obj.xWidth/2-cellSettings.a2];
                     obj.yCells = [obj.yHeight/2;obj.yHeight/2];
@@ -121,6 +127,9 @@ classdef WensinkField
                     obj.fCells = [cellSettings.f1;cellSettings.f2];
                     obj.rCells = [cellSettings.r1;cellSettings.r2];
                     obj.cCells = [1,0,0;0,1,0];
+                    obj.hitCells = [0;0];
+                    obj.popCells = [cellSettings.pop1;cellSettings.pop2];
+                    obj.fireCells = [cellSettings.fire1;cellSettings.fire2];
                 case 'LatticedXYCells' %Start with an initially ordered lattice of cells (with random up/down orientations)
                     obj = obj.overlayLattice(areaFrac,cellSettings.a);
                     obj.zCells = ones(size(obj.xCells)) * obj.zDepth/2;
@@ -129,6 +138,51 @@ classdef WensinkField
                     obj.fCells = cellSettings.f * ones(size(obj.xCells));
                     obj.rCells = cellSettings.r * ones(size(obj.xCells));
                     obj.cCells = rand(size(obj.xCells,1),3);
+                    obj.hitCells = zeros(size(obj.xCells));
+                    obj.popCells = repmat(cellSettings.pop,size(obj.xCells,1),1);
+                    obj.fireCells = cellSettings.fire * ones(size(obj.xCells));
+                case 'LatticedXYCellsNoBarrier' %Uses a less buggy method for inserting cells into the grid - useful if you don't need to worry about barriers
+                    totArea = (obj.xWidth * obj.yHeight) - (sum(obj.boundaryDesign(:))/(obj.resUp^2));
+                    singleArea = (obj.lam^2 * (cellSettings.a - 1)) + (pi * (obj.lam/2)^2);
+                    
+                    tgtRodNo = round(totArea*areaFrac/singleArea); %Total number of rods you want inserted into simulation domain
+                    
+                    %Space rods ~ 1 unit apart along their long axes
+                    noX = floor(obj.xWidth / (cellSettings.a + 0.5)); %Total number of cells laid end-to-end
+                    xSpace = obj.xWidth/noX;
+                    
+                    %And infer the necesssary y-spacing from these
+                    %calculations
+                    noY = ceil(tgtRodNo/noX);
+                    ySpace = obj.yHeight/noY;
+                    
+                    %Place rods into the grid until you reach the target
+                    %number (will leave a small patch in bottom right of
+                    %domain without rods - will disappear during approach
+                    %to steady-state)
+                    currNo = 1;
+                    for i = 1:noX
+                        for j = 1:noY
+                            obj.xCells(currNo,1) = xSpace*i - (xSpace/2);
+                            obj.yCells(currNo,1) = ySpace*j - (ySpace/2);
+                            if currNo == tgtRodNo
+                                break
+                            end
+                            currNo = currNo + 1;
+                        end
+                    end
+                    obj.xCells = obj.xCells + rand(tgtRodNo,1)*0.0001;
+                    obj.yCells = obj.yCells + rand(tgtRodNo,1)*0.0001;
+                    obj.zCells = ones(tgtRodNo,1) * obj.zDepth/2;
+                    obj.thetCells = (rand(tgtRodNo,1)>0.5)*pi;
+                    obj.phiCells = abs(randn(tgtRodNo,1))*0.001;
+                    obj.aCells = cellSettings.a * ones(tgtRodNo,1);
+                    obj.fCells = cellSettings.f * ones(tgtRodNo,1);
+                    obj.rCells = cellSettings.r * ones(tgtRodNo,1);
+                    obj.cCells = rand(tgtRodNo,3);
+                    obj.hitCells = zeros(tgtRodNo,1);
+                    obj.popCells = repmat(cellSettings.pop,size(obj.xCells,1),1);
+                    obj.fireCells = cellSettings.fire * ones(tgtRodNo,1);
                 case 'LatticedXYCellsTwoPops' %Start with an initially ordered lattice of cells (with random up/down orientations)
                     obj = obj.overlayLattice(areaFrac,cellSettings.a1); %Because of the way overlayLattice works, ensure that a1 is larger than or equal to a2.
                     obj.zCells = ones(size(obj.xCells)) * obj.zDepth/2;
@@ -142,14 +196,21 @@ classdef WensinkField
                     obj.fCells = zeros(size(obj.xCells,1),1);
                     obj.rCells = zeros(size(obj.xCells,1),1);
                     obj.cCells = zeros(size(obj.xCells,1),3);
+                    obj.hitCells = zeros(size(obj.xCells));
+                    obj.fireCells = zeros(size(obj.xCells));
+                    obj.popCells = repmat(' ',size(obj.xCells,1),1);
                     obj.aCells(type) = cellSettings.a1 * ones(sum(type),1);
                     obj.fCells(type) = cellSettings.f1 * ones(sum(type),1);
                     obj.rCells(type) = cellSettings.r1 * ones(sum(type),1);
                     obj.cCells(type,:) = repmat(cellSettings.c1,sum(type),1);
+                    obj.popCells(type) = cellSettings.pop1;
+                    obj.fireCells(type) = cellSettings.fire1 * ones(sum(type),1);
                     obj.aCells(~type) = cellSettings.a2 * ones(size(obj.xCells,1) - sum(type),1);
                     obj.fCells(~type) = cellSettings.f2 * ones(size(obj.xCells,1) - sum(type),1);
                     obj.rCells(~type) = cellSettings.r2 * ones(size(obj.xCells,1) - sum(type),1);
                     obj.cCells(~type,:) = repmat(cellSettings.c2,sum(~type),1);
+                    obj.popCells(~type) = cellSettings.pop2;
+                    obj.fireCells(~type) = cellSettings.fire2 * ones(sum(~type),1);
             end
             
             [obj.nCells,obj.lCells] = calculateSegmentNumberLength(obj.aCells,obj.lam);
@@ -297,6 +358,25 @@ classdef WensinkField
                         yFac = obj.yCells(k)/obj.yHeight;
                         obj.cCells(k,:) = [xFac,1-(xFac+yFac)/2,yFac];
                     end
+                case 'Population'
+                    popArr = [obj.aCells,obj.fCells,obj.fireCells,obj.rCells]; %Believe these to be the only properties that could distinguish populations
+                    popArr = sortrows(popArr);
+                    [~,~,ic] = unique(popArr,'rows');
+                    cmap = colormap('lines');
+                    ic(ic > size(cmap,1)) = size(cmap,1);
+                    obj.cCells = cmap(ic,:);
+                case 'Hits' %Choice for debugging purposes - won't necessarily always work with all parameter settings. Assumes a firing and non-firing population.
+                    maxHit = 4;
+                    for k = 1:size(obj.cCells,1)
+                        if obj.fCells(k) == 0 %Dead cells are set as gray
+                            obj.cCells(k,:) = [0.3,0.3,0.3];
+                        elseif obj.fireCells(k) > 0 %Firing cells are set as red
+                            obj.cCells(k,:) = [0,1,1];
+                        else
+                            currHits = obj.hitCells(k);
+                            obj.cCells(k,:) = [1,1-(currHits/maxHit),(currHits/maxHit)];
+                        end
+                    end
             end
         end
         
@@ -309,6 +389,7 @@ classdef WensinkField
                 oldY = obj.yCells(divInds) - yFac;
 %                 obj.zCells(divInds) = obj.zCells(divInds) - zFac;
                 obj.aCells(divInds) = obj.aCells(divInds)/2;
+                obj.hitCells(divInds) = obj.hitCells(divInds)/2;
                 
                 %Add in new cells
                 newX = oldX + 2*xFac;
@@ -322,6 +403,8 @@ classdef WensinkField
                 newU = obj.uCells(divInds,:);
                 newC = obj.cCells(divInds,:);
                 newF = obj.fCells(divInds,:);
+                newFire = obj.fireCells(divInds,:);
+                newHit = obj.hitCells(divInds,:);
                 
                 %Need to deal with periodic boundary conditions
                 if strcmp(obj.boundConds,'periodic')
@@ -352,6 +435,8 @@ classdef WensinkField
                 obj.uCells = [obj.uCells;newU];
                 obj.cCells = [obj.cCells;newC];
                 obj.fCells = [obj.fCells;newF];
+                obj.hitCells = [obj.hitCells;newHit];
+                obj.fireCells = [obj.fireCels;newFire];
                 
                 %Recalculate segment properties.
                 [obj.nCells,obj.lCells] = calculateSegmentNumberLength(obj.aCells,obj.lam);
@@ -368,6 +453,79 @@ classdef WensinkField
             
             %Update segment positions (introducing new segments if needed).
 %             obj = obj.calculateSegmentPositions();
+        end
+        
+        function obj = calculateHits(obj,fireRange,dt)
+            %Calculates hits from a contact-dependant killing system (e.g.
+            %CDI, T6SS). Note - assumes simulated rate (dt) is much faster
+            %than the hit rate, so a maximum of one hit per timepoint (per
+            %cell-cell interaction) is applied.
+            pxSize = 0.25; %Granularity of the pixel-based approach for calculating elliptical neighbourhoods. Set smaller to improve resolution of approach.
+            
+            %Begin by creating an image of the indices of each cell
+            indexImg = paintOverlapField(obj,pxSize);
+            
+            %Now step through each rod, and find which other rods it is
+            %within CDI range of. Apply hits to these probabilistically,
+            %based on the focal rod's firing rate.
+            for i = 1:size(obj.xCells,1)
+                if obj.fireCells(i) > 0
+                    expandImg = makeExpandedRodProfile(obj,i,fireRange,pxSize);
+                    
+                    contactInds = unique(indexImg(expandImg));
+                    contactInds(contactInds == 0) = [];
+                    contactInds(contactInds == i) = [];
+                    
+                    hitProb = obj.fireCells(i)*dt;
+                    hitEvts = rand(size(contactInds)) < hitProb;
+                    hitInds = contactInds(hitEvts);
+                    
+                    %This bit of code prevents you from accumulating hits
+                    %from cells of the same population - effectively
+                    %simulating cognate immunity gene expression
+                    hitPops = obj.popCells(hitInds);
+                    thisPop = obj.popCells(i);
+                    hitInds = hitInds(hitPops ~= thisPop);
+                    
+                    obj.hitCells(hitInds) = obj.hitCells(hitInds) + 1;
+                end
+            end
+        end
+        
+        function obj = killCells(obj,killThresh,deathType)
+            %Kills cells on the basis of the number of hits from the toxin
+            %system they have recieved. Any cells that exceed the specified
+            %threshold are removed from the simulation (deathType = lyse)
+            %or become inactive 'husks' (deathType = husk)
+            killInds = obj.hitCells > killThresh;
+
+            switch deathType
+                case 'lyse'
+                    %Remove killed cells from all fields
+                    obj.xCells(killInds) = [];
+                    obj.yCells(killInds) = [];
+                    obj.zCells(killInds) = [];
+                    obj.thetCells(killInds) = [];
+                    obj.phiCells(killInds) = [];
+                    obj.aCells(killInds) = [];
+                    obj.nCells(killInds) = [];
+                    obj.uCells(killInds,:) = [];
+                    obj.lCells(killInds) = [];
+                    obj.fCells(killInds) = [];
+                    obj.rCells(killInds) = [];
+                    obj.cCells(killInds,:) = [];
+                    obj.hitCells(killInds) = [];
+                    obj.fireCells(killInds) = [];
+                    obj.popCells(killInds) = [];
+                    
+                    obj = obj.calcDistMat();
+                case 'husk'
+                    %Inactivate all active behaviours of killed cells
+                    obj.fCells(killInds) = 0;
+                    obj.rCells(killInds) = 0;
+                    obj.fireCells(killInds) = 0;
+                    obj.popCells(killInds) = 'd';
+            end
         end
         
         function [drdt,dthetadt,dphidt] = calcVelocities(obj,f0,zElasticity)
@@ -493,7 +651,7 @@ classdef WensinkField
         
         function obj = randomReverse(obj,timeStep)
             %Reverse rate is the probability of a given cell reversing in a single time step. Results in a Binomial distribution of reversal events for a given cell (?).
-            reversingCells = obj.rCells > rand(size(obj.rCells))*timeStep;
+            reversingCells = obj.rCells > rand(size(obj.rCells))/timeStep;
             obj.thetCells(reversingCells) = rem(obj.thetCells(reversingCells) + 2*pi,2*pi) - pi;
         end
         

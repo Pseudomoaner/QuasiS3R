@@ -21,8 +21,7 @@ for i = 1:size(pD,1)
             nemList(j) = atan(dy4(ySurrList(j),xSurrList(j))/dx4(ySurrList(j),xSurrList(j)));
         end
         
-        [xOrient,yOrient] = GetphalfDefectOrientation(xDPos,yDPos,nemList,xSurrList,ySurrList);
-        pDorients(i) = atan2d(yOrient,xOrient);
+        pDorients(i) = GetphalfDefectOrientationNew(xDPos,yDPos,nemList,xSurrList,ySurrList);
     else
         pDorients(i) = nan;
     end
@@ -48,8 +47,7 @@ for i = 1:size(nD,1)
             nemList(j) = atan(dy4(ySurrList(j),xSurrList(j))/dx4(ySurrList(j),xSurrList(j)));
         end
         
-        [xOrient,yOrient] = GetmhalfDefectOrientation(xDPos,yDPos,nemList,xSurrList,ySurrList);
-        nDorients(i) = atan2d(yOrient,xOrient);
+        nDorients(i) = GetmhalfDefectOrientationNew(xDPos,yDPos,nemList,xSurrList,ySurrList);
     else
         nDorients(i) = nan;
     end
