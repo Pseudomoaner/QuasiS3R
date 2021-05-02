@@ -370,6 +370,87 @@ classdef WensinkField
 %             obj = obj.calculateSegmentPositions();
         end
         
+<<<<<<< Updated upstream
+=======
+        function obj = calculateHits(obj,fireRange,dt,hitRateType)
+            %Calculates hits from a contact-dependant killing system (e.g.
+            %CDI, T6SS). Note - assumes sampling rate (dt) is much faster
+            %than the hit rate, so a maximum of one hit per timepoint (per
+            %cell-cell interaction) is applied.
+            pxSize = 0.25; %Granularity of the pixel-based approach for calculating elliptical neighbourhoods. Set smaller to improve resolution of approach.
+            
+            %Begin by creating an image of the indices of each cell
+            indexImg = paintOverlapField(obj,pxSize);
+            
+            %Now step through each rod, and find which other rods it is
+            %within CDI range of. Apply hits to these probabilistically,
+            %based on the focal rod's firing rate.
+            for i = 1:size(obj.xCells,1)
+                if obj.fireCells(i) > 0
+                    expandImg = makeExpandedRodProfile(obj,i,fireRange,pxSize);
+                    
+                    contactInds = unique(indexImg(expandImg));
+                    contactInds(contactInds == 0) = [];
+                    contactInds(contactInds == i) = [];
+                    
+                    switch hitRateType
+                        case 'distributed'
+                            hitProb = obj.fireCells(i)*dt/numel(contactInds);
+                        case 'constant'
+                            hitProb = obj.fireCells(i)*dt;
+                    end
+                    hitEvts = rand(size(contactInds)) < hitProb;
+                    hitInds = contactInds(hitEvts);
+                    
+                    %This bit of code prevents you from accumulating hits
+                    %from cells of the same population - effectively
+                    %simulating cognate immunity gene expression
+                    hitPops = obj.popCells(hitInds);
+                    thisPop = obj.popCells(i);
+                    hitInds = hitInds(hitPops ~= thisPop);
+                    
+                    obj.hitCells(hitInds) = obj.hitCells(hitInds) + 1;
+                end
+            end
+        end
+        
+        function obj = killCells(obj,killThresh,deathType)
+            %Kills cells on the basis of the number of hits from the toxin
+            %system they have recieved. Any cells that exceed the specified
+            %threshold are removed from the simulation (deathType = lyse)
+            %or become inactive 'husks' (deathType = husk)
+            killInds = obj.hitCells > killThresh;
+
+            switch deathType
+                case 'lyse'
+                    %Remove killed cells from all fields
+                    obj.xCells(killInds) = [];
+                    obj.yCells(killInds) = [];
+                    obj.zCells(killInds) = [];
+                    obj.thetCells(killInds) = [];
+                    obj.phiCells(killInds) = [];
+                    obj.aCells(killInds) = [];
+                    obj.nCells(killInds) = [];
+                    obj.uCells(killInds,:) = [];
+                    obj.lCells(killInds) = [];
+                    obj.fCells(killInds) = [];
+                    obj.rCells(killInds) = [];
+                    obj.cCells(killInds,:) = [];
+                    obj.hitCells(killInds) = [];
+                    obj.fireCells(killInds) = [];
+                    obj.popCells(killInds) = [];
+                    
+                    obj = obj.calcDistMat();
+                case 'husk'
+                    %Inactivate all active behaviours of killed cells
+                    obj.fCells(killInds) = 0;
+                    obj.rCells(killInds) = 0;
+                    obj.fireCells(killInds) = 0;
+                    obj.popCells(killInds) = 'd';
+            end
+        end
+        
+>>>>>>> Stashed changes
         function [drdt,dthetadt,dphidt] = calcVelocities(obj,f0,zElasticity)
             %Calculates the rate of translation and rotation for all cells             
             [fT,fR] = calcFrictionTensors(obj.aCells,obj.uCells,f0);
