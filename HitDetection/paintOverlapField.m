@@ -64,6 +64,12 @@ for j = 1:size(xPxs,1)
         minYloc = minYglob-minYbig+1;
         maxYloc = size(ellipseImg,1) - (maxYbig-maxYglob);
         
+        %If there are any pixels that have already been filled by another
+        %cell, make sure they can't be occupied by this one. Otherwise the
+        %indices will add, which makes no sense.
+        occInds = outImg(minYglob:maxYglob,minXglob:maxXglob)==0;
+        ellipseImg(minYloc:maxYloc,minXloc:maxXloc) = ellipseImg(minYloc:maxYloc,minXloc:maxXloc).*occInds;
+        
         outImg(minYglob:maxYglob,minXglob:maxXglob) =...
             outImg(minYglob:maxYglob,minXglob:maxXglob)...
             + ellipseImg(minYloc:maxYloc,minXloc:maxXloc)*index;

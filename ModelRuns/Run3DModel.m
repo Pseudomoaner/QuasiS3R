@@ -24,6 +24,7 @@ fieldSettings.colJigRate = 0.0; %How quickly colours should 'jiggle' noisily (in
 fieldSettings.postDivMovement = 'reverse'; %How the daughter cell should move following cell division. Either 'reverse' (the opposite direction to the mother) or 'same' (the same direction as the mother).
 fieldSettings.fireRange = 2; %Range of the CDI system
 fieldSettings.killType = 'husk'; %Whether to remove cells from simulation after death ('lyse') or inactivate them, but leave their bodies ('husk')
+fieldSettings.hitRateType = 'distributed'; %Whether CDI hits are diluted over all cells ('distributed') or the per-neighbour hit rate is kept the same regardless of the number of contacts ('constant')
 fieldSettings.killThresh = 4; %Number of hits needed to kill a cell
 fieldSettings.growthRate = 0.0; %Average increase in aspect ratio over one unit of time.
 fieldSettings.divThresh = 8; %Aspect ratio at which the cell should divide.

@@ -14,7 +14,7 @@ for i = 1:fS.motileSteps
 
     %Simulate firing events
     if rem(i,fS.FireSkip) == 0
-        field = field.calculateHits(fS.fireRange,fS.FireSkip*fS.motiledt);
+        field = field.calculateHits(fS.fireRange,fS.FireSkip*fS.motiledt,fS.hitRateType);
         field = field.killCells(fS.killThresh,fS.killType);
     end
     

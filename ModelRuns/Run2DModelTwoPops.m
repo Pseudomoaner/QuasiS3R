@@ -24,6 +24,7 @@ fieldSettings.postDivMovement = 'reverse'; %How the daughter cell should move fo
 fieldSettings.fireRange = 2; %Range of the CDI system
 fieldSettings.killType = 'husk'; %Whether to remove cells from simulation after death ('lyse') or inactivate them, but leave their bodies ('husk')
 fieldSettings.killThresh = 4; %Number of hits needed to kill a cell
+fieldSettings.hitRateType = 'distributed'; %Whether CDI hits are diluted over all cells ('distributed') or the per-neighbour hit rate is kept the same regardless of the number of contacts ('constant')
 fieldSettings.growthRate = 0.0; %Average increase in aspect ratio over one unit of time.
 fieldSettings.divThresh = 8; %Aspect ratio at which the cell should divide.
 fieldSettings.zElasticity = inf; %Elasticity of the overlying substrate. Set to inf if you want to maintain cells in the monolayer.

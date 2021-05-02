@@ -455,9 +455,9 @@ classdef WensinkField
 %             obj = obj.calculateSegmentPositions();
         end
         
-        function obj = calculateHits(obj,fireRange,dt)
+        function obj = calculateHits(obj,fireRange,dt,hitRateType)
             %Calculates hits from a contact-dependant killing system (e.g.
-            %CDI, T6SS). Note - assumes simulated rate (dt) is much faster
+            %CDI, T6SS). Note - assumes sampling rate (dt) is much faster
             %than the hit rate, so a maximum of one hit per timepoint (per
             %cell-cell interaction) is applied.
             pxSize = 0.25; %Granularity of the pixel-based approach for calculating elliptical neighbourhoods. Set smaller to improve resolution of approach.
@@ -476,7 +476,13 @@ classdef WensinkField
                     contactInds(contactInds == 0) = [];
                     contactInds(contactInds == i) = [];
                     
-                    hitProb = obj.fireCells(i)*dt;
+                    switch hitRateType
+                        case 'distributed'
+                            hitProb = obj.fireCells(i)*dt/numel(contactInds);
+                        case 'constant'
+                            hitProb = obj.fireCells(i)*dt;
+                    end
+
                     hitEvts = rand(size(contactInds)) < hitProb;
                     hitInds = contactInds(hitEvts);
                     
