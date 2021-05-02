@@ -41,7 +41,7 @@
 %In Practice, its very easy... just take Nem Angle =atan(y/x)
 
 
-function [NormXphalfDefectTailToHdVect,NormYphalfDefectTailToHdVect]=GetphalfDefectOrientation(xphdcentre,yphdcentre,NemAngleListCW,XPositionNemList,YPositionNemList)
+function pHalfDefOri = GetphalfDefectOrientation(xphdcentre,yphdcentre,NemAngleListCW,XPositionNemList,YPositionNemList)
 dum=size(NemAngleListCW);
 oppositeGpInterval = round(dum(1,1)/2);
 
@@ -90,4 +90,6 @@ NormTailToHdVect=[xphdcentre-xtail;yphdcentre-ytail]/sqrt((xphdcentre-xtail)^2+(
 NormXphalfDefectTailToHdVect=NormTailToHdVect(1,1);
 NormYphalfDefectTailToHdVect=NormTailToHdVect(2,1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pHalfDefOri = atan2d(NormYphalfDefectTailToHdVect,NormXphalfDefectTailToHdVect);
 end

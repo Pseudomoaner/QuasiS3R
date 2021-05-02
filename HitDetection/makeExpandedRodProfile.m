@@ -3,6 +3,7 @@ function expandedProfile = makeExpandedRodProfile(WensinkField,cInd,CDIrange,pxS
 %expanded so you can see which neighbours are within range
 
 %Ellipse parameters
+
 xPx = round(WensinkField.xCells(cInd)/pxSize);
 yPx = round(WensinkField.yCells(cInd)/pxSize);
 majLenPx = ((WensinkField.aCells(cInd)*WensinkField.lam)+(CDIrange*2))/(2*pxSize);

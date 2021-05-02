@@ -12,8 +12,6 @@ for i = 1:fS.motileSteps
     fprintf('Frame is %i\n',i)
     field = field.stepModel(fS.motiledt,fS.f0,fS.zElasticity,fS.growthRate,fS.divThresh,fS.postDivMovement,fS.colJigRate,dS.colourCells);
 
-<<<<<<< Updated upstream
-=======
     %Simulate firing events
     if rem(i,fS.FireSkip) == 0
         field = field.calculateHits(fS.fireRange,fS.FireSkip*fS.motiledt,fS.hitRateType);
@@ -21,7 +19,6 @@ for i = 1:fS.motileSteps
     end
     
     %Output visualisation
->>>>>>> Stashed changes
     if rem(i,fS.FrameSkip) == 0
         if dS.saveFrames
             imPath = sprintf(dS.ImgPath,fC);

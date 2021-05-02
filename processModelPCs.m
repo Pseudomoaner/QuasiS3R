@@ -5,6 +5,7 @@ PCs.Centroid = PCs.Centroid(pS.startTime:end);
 PCs.Length = PCs.Length(pS.startTime:end);
 PCs.Tilt = PCs.Tilt(pS.startTime:end);
 PCs.Force = PCs.Force(pS.startTime:end);
+PCs.Population = PCs.Population(pS.startTime:end);
 
 %Build tracks
 [Tracks,Initials] = buildModelPCsTracks(PCs,fS);
@@ -14,6 +15,7 @@ LengthTracks = extractModelDataTrack(Tracks,Initials,PCs.Length);
 CentroidTracks = extractModelDataTrack(Tracks,Initials,PCs.Centroid);
 TiltTracks = extractModelDataTrack(Tracks,Initials,PCs.Tilt);
 ForceTracks = extractModelDataTrack(Tracks,Initials,PCs.Force);
+PopulationTracks = extractModelDataTrack(Tracks,Initials,PCs.Population);
 
 disp('Tracked...')
 
@@ -38,6 +40,7 @@ LengthTracks(lengthDist < pS.minTrackLength) = [];
 OrientationTracks(lengthDist < pS.minTrackLength) = [];
 TiltTracks(lengthDist < pS.minTrackLength) = [];
 ForceTracks(lengthDist < pS.minTrackLength) = [];
+PopulationTracks(lengthDist < pS.minTrackLength) = [];
 RawSpeed(lengthDist < pS.minTrackLength) = [];
 RawPhi(lengthDist < pS.minTrackLength) = [];
 SmoothSpeed(lengthDist < pS.minTrackLength) = [];
@@ -66,6 +69,7 @@ for i = 1:length(OrientationTracks)
     data(i).times = trackTimes{i};
     data(i).majorLen = LengthTracks{i};
     data(i).force = ForceTracks{i};
+    data(i).population = PopulationTracks{i};
 %     data(i).reverse = Reversals{i};
 end
 
@@ -75,6 +79,7 @@ trackableData.Centroid = PCs.Centroid;
 trackableData.Length = PCs.Length;
 trackableData.Tilt = PCs.Tilt;
 trackableData.Force = PCs.Force;
+trackableData.Population = PCs.Population;
 
 %And convert phi to be consistant with other data extraction (actually ends up inverted so you have to take the negative later, but better than having to reprocess all those films)
 for i = 1:length(data)
