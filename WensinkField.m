@@ -368,7 +368,7 @@ classdef WensinkField
                 case 'Hits' %Choice for debugging purposes - won't necessarily always work with all parameter settings. Assumes a firing and non-firing population.
                     maxHit = 4;
                     for k = 1:size(obj.cCells,1)
-                        if obj.fCells(k) == 0 %Dead cells are set as gray
+                        if strcmp(obj.popCells(k), 'd') %Dead cells are set as gray
                             obj.cCells(k,:) = [0.3,0.3,0.3];
                         elseif obj.fireCells(k) > 0 %Firing cells are set as red
                             obj.cCells(k,:) = [0,1,1];

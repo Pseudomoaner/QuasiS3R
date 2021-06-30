@@ -41,7 +41,7 @@ barrierSettings = struct(); %Need to create a dummy variable to pass into the in
 %function.
 cellSettingsType = 'LatticedXYCells'; %Type of rod initialization conditions that should be applied - either singleCell, doubleCell or LatticedXYCells
 cellSettings.a = 4; %Aspect ratio of rods (relative to fieldSettings.lam)
-cellSettings.f = 1; %Pushing force applied by each rod
+cellSettings.f = 0; %Pushing force applied by each rod
 cellSettings.r = 0; %Reversal rate associated with each rod
 cellSettings.c = [1,0,0]; %RGB values for the colour you want to make the cells of population 1
 cellSettings.fire = 0; %Firing rate of CDI system for this population

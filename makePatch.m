@@ -22,7 +22,17 @@ actualFrac = findFracInCircle(inField,testRad);
 tooSmall = actualFrac < patchSettings.fraction - (patchSettings.tol*patchSettings.fraction);
 tooBig = actualFrac > patchSettings.fraction + (patchSettings.tol*patchSettings.fraction);
 
+stepCnt = 0;
+
 while tooBig || tooSmall
+    %This bit of code terminates the while loop if it's been running for
+    %too long with no improvement
+    stepCnt = stepCnt + 1;
+    if stepCnt > 10
+        warning('Maximum number of steps in the patch radius calculation exceeded. Using best approximation...')
+        break
+    end
+    
     fracScale = patchSettings.fraction/actualFrac;
     
     testRad = testRad*sqrt(fracScale);
