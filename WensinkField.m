@@ -137,7 +137,7 @@ classdef WensinkField
                     obj.aCells = cellSettings.a * ones(size(obj.xCells));
                     obj.fCells = cellSettings.f * ones(size(obj.xCells));
                     obj.rCells = cellSettings.r * ones(size(obj.xCells));
-                    obj.cCells = rand(size(obj.xCells,1),3);
+                    obj.cCells = repmat(cellSettings.c,size(obj.xCells,1),1);
                     obj.hitCells = zeros(size(obj.xCells));
                     obj.popCells = repmat(cellSettings.pop,size(obj.xCells,1),1);
                     obj.fireCells = cellSettings.fire * ones(size(obj.xCells));
@@ -455,6 +455,29 @@ classdef WensinkField
 %             obj = obj.calculateSegmentPositions();
         end
         
+        function contacts = calculateContacts(obj,contactRange)
+            %Calculates a list of cells that are touching each other, as
+            %defined in the CDI hit detection code.
+            pxSize = 0.25; %Granularity of the pixel-based approach for calculating elliptical neighbourhoods. Set smaller to improve resolution of approach.
+            contacts = cell(size(obj.xCells,1),1);
+            
+            %Begin by creating an image of the indices of each cell
+            indexImg = paintOverlapField(obj,pxSize);
+            
+            %Now step through each rod, and find which other rods it is
+            %within CDI range of. Apply hits to these probabilistically,
+            %based on the focal rod's firing rate.
+            for i = 1:size(obj.xCells,1)
+                expandImg = makeExpandedRodProfile(obj,i,contactRange,pxSize);
+                
+                contactInds = unique(indexImg(expandImg));
+                contactInds(contactInds == 0) = [];
+                contactInds(contactInds == i) = [];
+                
+                contacts{i} = contactInds;
+            end
+        end
+        
         function obj = calculateHits(obj,fireRange,dt,hitRateType)
             %Calculates hits from a contact-dependant killing system (e.g.
             %CDI, T6SS). Note - assumes sampling rate (dt) is much faster
@@ -475,7 +498,7 @@ classdef WensinkField
                     contactInds = unique(indexImg(expandImg));
                     contactInds(contactInds == 0) = [];
                     contactInds(contactInds == i) = [];
-                    
+                                       
                     switch hitRateType
                         case 'distributed'
                             hitProb = obj.fireCells(i)*dt/numel(contactInds);
@@ -706,7 +729,7 @@ classdef WensinkField
             outImg = imresize(outImg,1/Downsample);
         end
         
-        function axHand = plotField(obj,posVec)
+        function axHand = plotField(obj,posVec,drawContacts,contactRange)
             %Draws the current state of the model - location and angles of all cells in model. Black spots are front of cells.
             %Note - this is the old (inelegant) method which is more
             %compatible with Matlab's other plotting functions. For nice,
@@ -729,7 +752,7 @@ classdef WensinkField
                 x=get(h,'Xdata');
                 y=get(h,'Ydata');
                 delete(h)
-                patch(x,y,obj.cCells(i,:),'EdgeColor','none');
+                patch(x,y,1-obj.cCells(i,:),'EdgeColor','none');
                 
                 if strcmp(obj.boundConds,'periodic')
                     %Also draw an ellipse at each of the periodic locations. Won't be rendered unless within field of view.
@@ -738,13 +761,13 @@ classdef WensinkField
                         x=get(h,'Xdata');
                         y=get(h,'Ydata');
                         delete(h)
-                        patch(x,y,obj.cCells(i,:),'EdgeColor','none');
+                        patch(x,y,1-obj.cCells(i,:),'EdgeColor','none');
                     elseif obj.xCells(i) + (obj.aCells(i)*obj.lam) > obj.xWidth
                         h = ellipse((obj.lCells(i)*(obj.nCells(i) - 1) + obj.lam)*0.5,obj.lam*0.5,obj.thetCells(i),obj.xCells(i) - obj.xWidth,obj.yCells(i),[0,0,0]);
                         x=get(h,'Xdata');
                         y=get(h,'Ydata');
                         delete(h)
-                        patch(x,y,obj.cCells(i,:),'EdgeColor','none');
+                        patch(x,y,1-obj.cCells(i,:),'EdgeColor','none');
                     end
                     
                     if obj.yCells(i) - (obj.aCells(i)*obj.lam) < 0
@@ -752,16 +775,34 @@ classdef WensinkField
                         x=get(h,'Xdata');
                         y=get(h,'Ydata');
                         delete(h)
-                        patch(x,y,obj.cCells(i,:),'EdgeColor','none');
+                        patch(x,y,1-obj.cCells(i,:),'EdgeColor','none');
                     elseif obj.yCells(i) + (obj.aCells(i)*obj.lam) > obj.yHeight
                         h = ellipse((obj.lCells(i)*(obj.nCells(i) - 1) + obj.lam)*0.5,obj.lam*0.5,obj.thetCells(i),obj.xCells(i),obj.yCells(i) - obj.yHeight,[0,0,0]);
                         x=get(h,'Xdata');
                         y=get(h,'Ydata');
                         delete(h)
-                        patch(x,y,obj.cCells(i,:),'EdgeColor','none');
+                        patch(x,y,1-obj.cCells(i,:),'EdgeColor','none');
+                    end
+                end
+            end
+            
+            if drawContacts
+                contacts = obj.calculateContacts(contactRange);
+                for i = 1:size(contacts,1)
+                    for j = 1:size(contacts{i},1)
+                        x1 = obj.xCells(i);
+                        y1 = obj.yCells(i);
+                        y2 = obj.yCells(contacts{i}(j));
+                        x2 = obj.xCells(contacts{i}(j));
+                        if abs(x1-x2) < 10 && abs(y1-y2) < 10
+                            plot(x1,y1,'w.','MarkerSize',15)
+                            plot(x2,y2,'w.','MarkerSize',15)
+                            plot([x1,x2],[y1,y2],'k','LineWidth',1.5)
+                        end
                     end
                 end
             end
         end
+        
     end
 end

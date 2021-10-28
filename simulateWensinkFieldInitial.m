@@ -22,7 +22,7 @@ for i = 1:fS.motileSteps
                     
                     imwrite(outImg,fullImPath)                    
                 case 'plot'
-                    outAx = field.plotField(dS.posVec);
+                    outAx = field.plotField(dS.posVec,dS.showContacts,dS.contactDist);
                     export_fig(fullImPath,'-m2')
                     
                     cla(outAx)

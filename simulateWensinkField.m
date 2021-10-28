@@ -1,4 +1,4 @@
-function [PCs,field] = simulateWensinkField(startField,fS,dS)
+function [PCs,field,contactSet] = simulateWensinkField(startField,fS,dS)
 
 PCs = [];
 field = startField;
@@ -7,15 +7,19 @@ PCs = interfaceModelAndDiffusionTracker(field,PCs,1);
 
 fC = 0;
 
+contactSet = {};
+
 %Actual simulation
 for i = 1:fS.motileSteps
     fprintf('Frame is %i\n',i)
     field = field.stepModel(fS.motiledt,fS.f0,fS.zElasticity,fS.growthRate,fS.divThresh,fS.postDivMovement,fS.colJigRate,dS.colourCells);
-
+    
     %Simulate firing events
     if rem(i,fS.FireSkip) == 0
         field = field.calculateHits(fS.fireRange,fS.FireSkip*fS.motiledt,fS.hitRateType);
         field = field.killCells(fS.killThresh,fS.killType);
+        
+        contactSet{round(i/fS.FireSkip)} = field.calculateContacts(dS.contactDist);
     end
     
     %Output visualisation
@@ -30,7 +34,7 @@ for i = 1:fS.motileSteps
                     
                     imwrite(outImg,fullImPath)                    
                 case 'plot'
-                    outAx = field.plotField(dS.posVec);
+                    outAx = field.plotField(dS.posVec,dS.showContacts,dS.contactDist);
                     export_fig(fullImPath,'-m2')
                     
                     cla(outAx)
