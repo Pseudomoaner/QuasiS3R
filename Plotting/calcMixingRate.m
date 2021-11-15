@@ -1,15 +1,16 @@
 clear all
 close all
 
-root = 'C:\Users\olijm\Desktop\CDI_modelling\fire3';
-branches = {'SimulationResults'};
+root = '/home/omeacock/Documents/SPRruns/CDI_Mixing_Fitting/';
+branch = 'SimulationResults_Rho';
+twigs = {'0.01_2','0.0065_2','0.003_2','0.0018_2','0.001_2','0.00065_2','0.0003_2','0.00018_2','0.0001_2'};
 extension = '.mat';
 
-rateStore = zeros(size(branches));
+rateStore = zeros(size(twigs));
 
 %Loop through all your simulations
-for i = 1:size(branches,1)
-    load([root,filesep,branches{i},extension])
+for i = 1:size(twigs,2)
+    load([root,filesep,branch,twigs{i},extension])
 
     %Extract the contact fraction timecourses
     [stotContactFrac,ttosContactFrac] = calculateContactFracs(trackableData,fieldSettings); %stotContactFrac means sensitive to toxic contact fraction, and vica versa for ttosContactFrac
@@ -30,4 +31,9 @@ for i = 1:size(branches,1)
     plot(time,ttosContactFrac)
     xlabel('Time')
     ylabel('Mixed toxic/sensitive contacts:total toxic contacts')
+    
+    save([root,filesep,branch,twigs{i},'_ContactFracs',extension],'wellMixedFrac','yfit')
+    
+    yfit.b
+    pause(0.1)
 end

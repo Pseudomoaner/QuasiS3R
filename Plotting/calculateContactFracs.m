@@ -15,6 +15,8 @@ stotContactFrac = zeros(size(trackableData.Force)); %Fraction of sensitive to to
 ttosContactFrac = zeros(size(trackableData.Force)); %Fraction of toxic to sensitive contacts to all toxic contacts
 
 for i = 1:size(trackableData.Force,2) %Loop over time
+    fprintf('Frame %d of %d.\n',i,size(trackableData.Force,2))
+    
     currOverlap = overlaps(:,:,i);
 
     stosCount = 0;
