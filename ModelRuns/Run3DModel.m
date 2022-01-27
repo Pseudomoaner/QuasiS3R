@@ -12,35 +12,23 @@ outputMatName = 'SimulationResults.mat';
 
 %Parameters of model
 %Settings applied to entire field
-fieldSettings.fieldWidth = 300; %Width of the simulated domain (in units of fieldSettings.lam)
-fieldSettings.fieldHeight = 300; %Height of the simulated domain (in units of fieldSettings.lam)
-fieldSettings.maxX = fieldSettings.fieldWidth;
-fieldSettings.maxY = fieldSettings.fieldHeight;
-fieldSettings.fieldDepth = 10; %Depth of the simulated domain. Value is not critical, provided it is somewhat greater than the length of the longest rod in the simulation
-fieldSettings.U0 = 250; %Potential amplitude. Value is not critical, provided it is sufficient to prevent rod-rod crossing (U0 = 250 does this)
-fieldSettings.lam = 1.0; %Screening length, defining the interaction distance between rods
-fieldSettings.f0 = 1; %Stokesian friction coefficient
-fieldSettings.colJigRate = 0.0; %How quickly colours should 'jiggle' noisily (in HSV space). Values above 0 can be useful for visualising lineages of dividing cells. 
+fieldSettings.xWidth = 300; %Width of the simulated domain (in units of fieldSettings.lam)
+fieldSettings.yHeight = 300; %Height of the simulated domain (in units of fieldSettings.lam)
+fieldSettings.zDepth = 10; %Depth of the simulated domain. Value is not critical, provided it is somewhat greater than the length of the longest rod in the simulation
 fieldSettings.postDivMovement = 'reverse'; %How the daughter cell should move following cell division. Either 'reverse' (the opposite direction to the mother) or 'same' (the same direction as the mother).
-fieldSettings.fireRange = 2; %Range of the CDI system
-fieldSettings.killType = 'husk'; %Whether to remove cells from simulation after death ('lyse') or inactivate them, but leave their bodies ('husk')
-fieldSettings.hitRateType = 'distributed'; %Whether CDI hits are diluted over all cells ('distributed') or the per-neighbour hit rate is kept the same regardless of the number of contacts ('constant')
-fieldSettings.killThresh = 4; %Number of hits needed to kill a cell
 fieldSettings.growthRate = 0.0; %Average increase in aspect ratio over one unit of time.
 fieldSettings.divThresh = 8; %Aspect ratio at which the cell should divide.
 fieldSettings.zElasticity = 0.6; %Elasticity of the overlying substrate. Set to inf if you want to maintain cells in the monolayer.
 fieldSettings.areaFrac = 0.25; %Fraction of the total area that should be occupied by cells.
-fieldSettings.boundaryConditions = 'periodic';
 
 %Choose your cell and barrier settings
-barrierSettingsType = 'none'; %Type of static barriers that should be present in simulation - either none or loaded
-barrierSettings = struct(); %Need to create a dummy variable to pass into the initialization function, even if you don't have any barriers in your system
+barrierSettings.type = 'none'; %Type of static barriers that should be present in simulation - either none or loaded
 
 %Settings for the active rods - note that the use of the 'LatticedXYCells'
 %option means that all rods are assumed to be identical. Initialization can
 %be customized by writing additional code in the WensinkField.populateField
 %function.
-cellSettingsType = 'LatticedXYCellsTwoPops'; %Type of rod initialization conditions that should be applied - either singleCell, doubleCell or LatticedXYCells
+cellSettings.type = 'LatticedXYCellsTwoPops'; %Type of rod initialization conditions that should be applied - either singleCell, doubleCell or LatticedXYCells
 cellSettings.popFrac = 0.5;
 cellSettings.a1 = 4; %Aspect ratio of rods (relative to fieldSettings.lam)
 cellSettings.a2 = 5;
@@ -73,10 +61,11 @@ firingDt = 1; %Size of the timestep for calculating firing events
 samplingRate = 5.0; %How frequently samples of the simulation should be taken
 settlingSimTime = 300; %How long it will take for the simulation to settle into an active configuration
 targetSimTime = 600; %Target motile simulation time
+contactFind = false; %Whether or not to return structures containing instantaneous cell-cell contact data
 
 %% Part 0: Initialize field for this simulation
-startField = WensinkField(fieldSettings.fieldWidth,fieldSettings.fieldHeight,fieldSettings.fieldDepth,fieldSettings.U0,fieldSettings.lam,fieldSettings.boundaryConditions);
-startField = startField.populateField(barrierSettingsType,barrierSettings,cellSettingsType,cellSettings,fieldSettings.areaFrac);
+startField = WensinkField(fieldSettings);
+startField = startField.populateField(barrierSettings,cellSettings,fieldSettings.areaFrac);
 
 %% Part 1: Make sure that the selected value of motiledt doesn't make the simulation explode, or reduce until you reach numerical stability
 
@@ -105,7 +94,7 @@ fieldSettings.motileSteps = ceil(settlingSimTime/(fieldSettings.motiledt*fieldSe
 
 %% Part 3: Do another (fully sampled) simulation for a longer period of time - only data from this simulation period will be stored
 fieldSettings.motileSteps = ceil(targetSimTime/(fieldSettings.motiledt*fieldSettings.FrameSkip))*fieldSettings.FrameSkip;
-[PCs,endField] = simulateWensinkField(intermediateField,fieldSettings,dispSettings);
+[PCs,endField] = simulateWensinkField(intermediateField,fieldSettings,dispSettings,contactFind);
 
 %% Part 4: Process data and save simulation results
 fieldSettings.dt = fieldSettings.motiledt * fieldSettings.FrameSkip;
@@ -116,4 +105,4 @@ fieldSettings.maxF = round(fieldSettings.motileSteps/fieldSettings.FrameSkip);
 exportVtkDataTxts(trackableData,RootSim,fieldSettings,false,[false,false]);
 
 fullMatOut = [RootSim,filesep,outputMatName];
-save(fullMatOut)
+save(fullMatOut,'data','trackableData','toMappings','fromMappings','fieldSettings','cellSettings','procSettings','samplingRate','startMotileDt','endField')

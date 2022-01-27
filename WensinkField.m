@@ -32,33 +32,140 @@ classdef WensinkField
         cellDists %Distance between all cells. Indexed in same way as obj.cells.
         distThresh %Distance between cells, beyond which interactions are too weak to be relevant. 
         U0 %Potential Amplitude
+        f0 %Stoksian friction coefficient
+        zElasticity %Elasticity of the confining material in the z-direction
         lam %Screening length of Yukawa segements
+        contactRange %Range of CDI system
+        killType %Way dead cells are dealt with (lyse or husk)
+        killThresh %How many hits must accumulate for a sensitive cell to be killed
+        hitRateType %Way CDI hits are dealt out to neighbours (distributed or constant)
+
         boundConds %Boundary conditions (periodic or none)
         boundaryDesign %Image containing an image of the design of the confinement
         resUp %Difference in resolution between boundaryDesign image and actual simulation domain
+        colJigRate %How quickly colours should 'jiggle' noisily (in HSV space). Values above 0 can be useful for visualising lineages of dividing cells.
         
         gpuAvailable %Whether there is a GPU available in the current system
         compiled %Whether there is a compiled .mex version of the potential gradient functions available
     end
     methods
-        function obj = WensinkField(xWidth,yHeight,zDepth,U0,lam,boundaryConditions)
-            if isnumeric(xWidth) && xWidth > 0 && isnumeric(yHeight) && yHeight > 0
-                obj.xWidth = xWidth;
-                obj.yHeight= yHeight;
-                obj.zDepth = zDepth;
+        function obj = WensinkField(fS)
+            inputCheck = isfield(fS,{'xWidth','yHeight','zDepth','U0','lam','boundaryConditions','f0','zElasticity','contactRange','killType','hitRateType','colJigRate','killThresh'});
+
+            %Check and store domain size settings
+            if ~inputCheck(1) || ~inputCheck(2) %Must have the domain size
+                error('fieldSettings must include xWidth and yHeight as fields')
             else
-                error('Input arguments to WensinkField are not valid');
+                validateattributes(fS.xWidth,{'numeric'},{'scalar','positive'})
+                validateattributes(fS.yHeight,{'numeric'},{'scalar','positive'})
+                obj.xWidth = fS.xWidth;
+                obj.yHeight = fS.yHeight;
+
+                if inputCheck(3)
+                    validateattributes(fS.zDepth,{'numeric'},{'scalar','positive'})
+                    obj.zDepth = fS.zDepth;
+                else
+                    obj.zDepth = 20; %Default value
+                end
+            end            
+            
+            %Check U0
+            if inputCheck(4)
+                validateattributes(fS.U0,{'numeric'},{'scalar','positive'})
+                obj.U0 = fS.U0;
+            else
+                obj.U0 = 250;
             end
             
-            obj.U0 = U0;
-            obj.lam = lam;
-            obj.boundConds = boundaryConditions;
-            
+            %Check lambda
+            if inputCheck(5)
+                validateattributes(fS.lam,{'numeric'},{'scalar','positive'})
+                obj.lam = fS.lam;
+            else
+                obj.lam = 1;
+            end
+
+            %Check boundary conditions
+            if inputCheck(6)
+                validateattributes(fS.boundaryConditions,{'char'},{'scalartext'})
+                if ~any(strcmp({'none','periodic'},fS.boundaryConditions))
+                    error('Expected boundary conditions to be specified as either "none" or "periodic".')
+                else
+                    obj.boundConds = fS.boundaryConditions;
+                end
+            else
+                obj.boundConds = 'periodic';
+            end
+
+            %Check friction coefficient
+            if inputCheck(7)
+                validateattributes(fS.f0,{'numeric'},{'scalar','positive'})
+                obj.f0 = fS.f0;
+            else
+                obj.f0 = 1;
+            end
+
+            %Check z-dimensional elasticity
+            if inputCheck(8)
+                validateattributes(fS.zElasticity,{'numeric'},{'scalar','positive'})
+                obj.zElasticity = fS.zElasticity;
+            else
+                obj.zElasticity = inf;
+            end
+
+            %Check firing range
+            if inputCheck(9)
+                validateattributes(fS.contactRange,{'numeric'},{'scalar','positive'})
+                obj.contactRange = fS.contactRange;
+            else
+                obj.contactRange = 2;
+            end
+
+            %Check killing type
+            if inputCheck(10)
+                validateattributes(fS.killType,{'char'},{'scalartext'})
+                if ~any(strcmp({'lyse','husk'},fS.killType))
+                    error('Expected killing type to be specified as either "lyse" or "husk".')
+                else
+                    obj.killType = fS.killType;
+                end
+            else
+                obj.killType = 'husk';
+            end
+
+            %Check killing type
+            if inputCheck(11)
+                validateattributes(fS.hitRateType,{'char'},{'scalartext'})
+                if ~any(strcmp({'distributed','constant'},fS.hitRateType))
+                    error('Expected hit rate type to be specified as either "distributed" or "constant".')
+                else
+                    obj.hitRateType = fS.hitRateType;
+                end
+            else
+                obj.hitRateType = 'distributed';
+            end
+
+            %Check colour drift rate
+            if inputCheck(12)
+                validateattributes(fS.colJigRate,{'numeric'},{'scalar','positive'})
+                obj.colJigRate = fS.colJigRate;
+            else
+                obj.colJigRate = 0;
+            end
+
+            %Check killing threshold
+            if inputCheck(13)
+                validateattributes(fS.killThresh,{'numeric'},{'scalar','positive','integer'})
+                obj.killThresh = fS.killThresh;
+            else
+                obj.killThresh = 1;
+            end
+
             %Check to see if GPU and/or .mex files are available for
             %calculating the potential between rods
             try
                 gpuArray(1);
-                obj.gpuAvailable = true; %Currently set to false because the GPU is slower than the CPU for the current problem size... but good to keep the option, in case I manage to optimise things more successfully in the future
+                obj.gpuAvailable = true;
             catch
                 obj.gpuAvailable = false;
             end
@@ -75,10 +182,10 @@ classdef WensinkField
             end
         end
         
-        function obj = populateField(obj,barrierSettingsType,barrierSettings,cellSettingsType,cellSettings,areaFrac)
+        function obj = populateField(obj,barrierSettings,cellSettings,areaFrac)
             %Populates the field with a number of randomly positioned cells of the given force generation and a number of static 'barrier' rods.
             
-            switch barrierSettingsType
+            switch barrierSettings.type
                 case 'none'
                     obj.xBarr = [];
                     obj.yBarr = [];
@@ -103,7 +210,7 @@ classdef WensinkField
                     obj.resUp = barrierSettings.resUp;
             end     
             
-            switch cellSettingsType
+            switch cellSettings.type
                 case 'singleCell'
                     obj.xCells = obj.xWidth/2;
                     obj.yCells = obj.yHeight/2;
@@ -304,7 +411,7 @@ classdef WensinkField
             obj.distThresh = maxLen + obj.lam + log(obj.U0); %Use of log(U0) here is somewhat justified by the exponential drop off in repelling strength. But not terribly. Use cautiously.
         end
         
-        function obj = growAndDivide(obj,growthRate,dt,divThresh,postMovement,colJigRate)
+        function obj = growAndDivide(obj,growthRate,dt,divThresh,postMovement)
             %Grows all cells by a stochastic amount and adds any offspring to the list of exisiting cells.
             obj = obj.growCells(growthRate,dt);
             
@@ -312,7 +419,7 @@ classdef WensinkField
             obj = obj.divideCells(divCells);    
             
             %Jiggle colours a little
-            obj = obj.jigColours(colJigRate,divCells);
+            obj = obj.jigColours(divCells);
             
             switch postMovement
                 case 'same'
@@ -328,12 +435,12 @@ classdef WensinkField
             end
         end
         
-        function obj = jigColours(obj,jigRate,divCells)
+        function obj = jigColours(obj,divCells)
             %Jiggles the current hue of the object in hue/saturation space and converts back to RGB.
             for i = (size(divCells,1)+1):size(obj.cCells,1)
                 outmap = rgb2hsv(obj.cCells(i,:));
                 
-                outmap(1) = mod(outmap(1) + (randn(1)*jigRate),1);
+                outmap(1) = mod(outmap(1) + (randn(1)*obj.colJigRate),1);
                 obj.cCells(i,:) = hsv2rgb(outmap);
             end
         end
@@ -366,15 +473,17 @@ classdef WensinkField
                     ic(ic > size(cmap,1)) = size(cmap,1);
                     obj.cCells = cmap(ic,:);
                 case 'Hits' %Choice for debugging purposes - won't necessarily always work with all parameter settings. Assumes a firing and non-firing population.
-                    maxHit = 4;
+                    maxHit = 5;
                     for k = 1:size(obj.cCells,1)
                         if strcmp(obj.popCells(k), 'd') %Dead cells are set as gray
                             obj.cCells(k,:) = [0.3,0.3,0.3];
-                        elseif obj.fireCells(k) > 0 %Firing cells are set as red
-                            obj.cCells(k,:) = [0,1,1];
+                        elseif obj.fireCells(k) > 0 %Firing cells are set as black
+                            obj.cCells(k,:) = [1,1,1];
+                        elseif obj.hitCells(k) == 0 %Unhit cells are set as light blue
+                            obj.cCells(k,:) = [1,0.4,0];
                         else
-                            currHits = obj.hitCells(k);
-                            obj.cCells(k,:) = [1,1-(currHits/maxHit),(currHits/maxHit)];
+                            currHits = min(obj.hitCells(k),maxHit);
+                            obj.cCells(k,:) = [0,0.15+(currHits/maxHit)*0.85,1];
                         end
                     end
             end
@@ -455,7 +564,7 @@ classdef WensinkField
 %             obj = obj.calculateSegmentPositions();
         end
         
-        function contacts = calculateContacts(obj,contactRange)
+        function contacts = calculateContacts(obj)
             %Calculates a list of cells that are touching each other, as
             %defined in the CDI hit detection code.
             pxSize = 0.25; %Granularity of the pixel-based approach for calculating elliptical neighbourhoods. Set smaller to improve resolution of approach.
@@ -468,7 +577,7 @@ classdef WensinkField
             %within CDI range of. Apply hits to these probabilistically,
             %based on the focal rod's firing rate.
             for i = 1:size(obj.xCells,1)
-                expandImg = makeExpandedRodProfile(obj,i,contactRange,pxSize);
+                expandImg = makeExpandedRodProfile(obj,i,pxSize);
                 
                 contactInds = unique(indexImg(expandImg));
                 contactInds(contactInds == 0) = [];
@@ -478,7 +587,7 @@ classdef WensinkField
             end
         end
         
-        function obj = calculateHits(obj,fireRange,dt,hitRateType)
+        function [obj,hitNoNew,hitNoTot] = calculateHits(obj,dt)
             %Calculates hits from a contact-dependant killing system (e.g.
             %CDI, T6SS). Note - assumes sampling rate (dt) is much faster
             %than the hit rate, so a maximum of one hit per timepoint (per
@@ -491,15 +600,17 @@ classdef WensinkField
             %Now step through each rod, and find which other rods it is
             %within CDI range of. Apply hits to these probabilistically,
             %based on the focal rod's firing rate.
+            hitNoNew = 0;
+            hitNoTot = 0;
             for i = 1:size(obj.xCells,1)
-                if obj.fireCells(i) > 0
-                    expandImg = makeExpandedRodProfile(obj,i,fireRange,pxSize);
+                if obj.fireCells(i) > 0 %If this is an attacker
+                    expandImg = makeExpandedRodProfile(obj,i,pxSize);
                     
                     contactInds = unique(indexImg(expandImg));
                     contactInds(contactInds == 0) = [];
                     contactInds(contactInds == i) = [];
                                        
-                    switch hitRateType
+                    switch obj.hitRateType
                         case 'distributed'
                             hitProb = obj.fireCells(i)*dt/numel(contactInds);
                         case 'constant'
@@ -515,20 +626,23 @@ classdef WensinkField
                     hitPops = obj.popCells(hitInds);
                     thisPop = obj.popCells(i);
                     hitInds = hitInds(hitPops ~= thisPop);
+
+                    hitNoNew = hitNoNew + sum(obj.hitCells(hitInds) == 0); %Total number of cells that have never been hit that are about to be hit for the first time
+                    hitNoTot = hitNoTot + size(hitInds,1); %Total number of hits applied by this attacker cell to sensitive cells
                     
                     obj.hitCells(hitInds) = obj.hitCells(hitInds) + 1;
                 end
             end
         end
         
-        function obj = killCells(obj,killThresh,deathType)
+        function obj = killCells(obj)
             %Kills cells on the basis of the number of hits from the toxin
             %system they have recieved. Any cells that exceed the specified
-            %threshold are removed from the simulation (deathType = lyse)
-            %or become inactive 'husks' (deathType = husk)
-            killInds = obj.hitCells > killThresh;
+            %threshold are removed from the simulation (killType = lyse)
+            %or become inactive 'husks' (killType = husk)
+            killInds = obj.hitCells > obj.killThresh;
 
-            switch deathType
+            switch obj.killType
                 case 'lyse'
                     %Remove killed cells from all fields
                     obj.xCells(killInds) = [];
@@ -557,9 +671,9 @@ classdef WensinkField
             end
         end
         
-        function [drdt,dthetadt,dphidt] = calcVelocities(obj,f0,zElasticity)
+        function [drdt,dthetadt,dphidt] = calcVelocities(obj,stepType)
             %Calculates the rate of translation and rotation for all cells             
-            [fT,fR] = calcFrictionTensors(obj.aCells,obj.uCells,f0);
+            [fT,fR] = calcFrictionTensors(obj.aCells,obj.uCells,obj.f0);
             [fPar,~,~] = calcGeomFactors(obj.aCells);
             
             %I will provide three methods for calculating the potential
@@ -583,21 +697,21 @@ classdef WensinkField
             dphidt = zeros(size(obj.xCells));
                 
             for i = 1:size(obj.xCells,1)
-                v0 = obj.fCells(i)/(f0*fPar(i)); %The self-propulsion velocity of a non-interacting SPR
+                v0 = obj.fCells(i)/(obj.f0*fPar(i)); %The self-propulsion velocity of a non-interacting SPR
                 uAlph = obj.uCells(i,:)'; %The unit vector representing the current orientation of the rod
                 
                 drdt(i,:) = (v0*uAlph - (fT(:,:,i)\gradXYZ(i,:)'))';
                 drdt(i,3) = 0; %Set the z movement component to be 0 (so cells don't move out of the monolayer)
                 dthetadt(i) = -gradTheta(i)/fR(i);
-                if ~isinf(zElasticity) 
-                    dphidt(i) = -(gradPhi(i) + (zElasticity/2) * (obj.aCells(i)^2) * cos(obj.phiCells(i)) * sin(obj.phiCells(i)))/fR(i); %We use a Kelvin-Voigt model, with gradPhi being taken as proportional to the stress term and strain proportional to the displacement of the cell from the neutral (phi = 0) position
+                if ~isinf(obj.zElasticity) && ~strcmp(stepType,'burnIn') && ~strcmp(stepType,'Initial')
+                    dphidt(i) = -(gradPhi(i) + (obj.zElasticity/2) * (obj.aCells(i)^2) * cos(obj.phiCells(i)) * sin(obj.phiCells(i)))/fR(i); %We use a Kelvin-Voigt model, with gradPhi being taken as proportional to the stress term and strain proportional to the displacement of the cell from the neutral (phi = 0) position
                 else
                     dphidt(i) = 0;
                 end
             end
         end
         
-        function obj = stepModel(obj,timeStep,f0,zElasticity,growthRate,divThresh,postMovement,colJigRate,colourCells)
+        function obj = stepModel(obj,timeStep,growthRate,divThresh,postMovement,colourCells,stepType)
             %Increases the time by one step, updating cell positions based on their current velocities.
             
             %Calculate distance matrix and threshold if needed (e.g. for first time point)
@@ -611,40 +725,31 @@ classdef WensinkField
             %Need to re-calculate distance threshold at each step. May change as cells grow.
             
 %             %Apply the RK4 method to simulate movement dynamics
-%             [drdtk1,dthetadtk1,dphidtk1] = obj.calcVelocities(f0,zElasticity);
+%             [drdtk1,dthetadtk1,dphidtk1] = obj.calcVelocities(stepType);
 %             k2 = obj.moveCells(drdtk1,dthetadtk1,dphidtk1,timeStep/2);
-%             [drdtk2,dthetadtk2,dphidtk2] = k2.calcVelocities(f0,zElasticity);
+%             [drdtk2,dthetadtk2,dphidtk2] = k2.calcVelocities(stepType);
 %             k3 = obj.moveCells(drdtk2,dthetadtk2,dphidtk2,timeStep/2);
-%             [drdtk3,dthetadtk3,dphidtk3] = k3.calcVelocities(f0,zElasticity);
+%             [drdtk3,dthetadtk3,dphidtk3] = k3.calcVelocities(stepType);
 %             k4 = obj.moveCells(drdtk3,dthetadtk3,dphidtk3,timeStep);
-%             [drdtk4,dthetadtk4,dphidtk4] = k4.calcVelocities(f0,zElasticity);
+%             [drdtk4,dthetadtk4,dphidtk4] = k4.calcVelocities(stepType);
 %             
 %             drdt = 1/6*(drdtk1 + 2*drdtk2 + 2*drdtk3 + drdtk4);
 %             dthetadt = 1/6*(dthetadtk1 + 2*dthetadtk2 + 2*dthetadtk3 + dthetadtk4);
 %             dphidt = 1/6*(dphidtk1 + 2*dphidtk2 + 2*dphidtk3 + dphidtk4);
             
             %Apply midpoint method to simulate movement dynamics
-            [drdtk1,dthetadtk1,dphidtk1] = obj.calcVelocities(f0,zElasticity);
+            [drdtk1,dthetadtk1,dphidtk1] = obj.calcVelocities(stepType);
             k1 = obj.moveCells(drdtk1,dthetadtk1,dphidtk1,timeStep/2);
-            [drdt,dthetadt,dphidt] = k1.calcVelocities(f0,zElasticity);
+            [drdt,dthetadt,dphidt] = k1.calcVelocities(stepType);
             
 %             %Apply Euler method to simulate movement dynamics
-%             [drdt,dthetadt,dphidt] = obj.calcVelocities(f0,zElasticity);
+%             [drdt,dthetadt,dphidt] = obj.calcVelocities(stepType);
 
             %Update position and angle of cells based on dynamic parameters and timestep size
             obj = obj.moveCells(drdt,dthetadt,dphidt,timeStep);
             
-            tmp = obj.growAndDivide(growthRate,timeStep,divThresh,postMovement,colJigRate);
-            if sum(tmp.xCells < 0) > 0 || sum(tmp.yCells < 0) > 0 || sum(tmp.xCells > tmp.xWidth) > 0 || sum(tmp.yCells > tmp.yHeight) > 0
-                disp('break')
-            end
-            
             %Update the lengths of the cells and add any extra daughter cells that arise.
-            obj = obj.growAndDivide(growthRate,timeStep,divThresh,postMovement,colJigRate);
-            
-            if sum(obj.xCells < 0) > 0 || sum(obj.yCells < 0) > 0 || sum(obj.xCells > obj.xWidth) > 0 || sum(obj.yCells > obj.yHeight) > 0
-                disp('break')
-            end
+            obj = obj.growAndDivide(growthRate,timeStep,divThresh,postMovement);
             
             %Invert the movement direction of any cells regarded to have reversed.
             obj = obj.randomReverse(timeStep);
@@ -729,7 +834,7 @@ classdef WensinkField
             outImg = imresize(outImg,1/Downsample);
         end
         
-        function axHand = plotField(obj,posVec,drawContacts,contactRange)
+        function axHand = plotField(obj,posVec,drawContacts)
             %Draws the current state of the model - location and angles of all cells in model. Black spots are front of cells.
             %Note - this is the old (inelegant) method which is more
             %compatible with Matlab's other plotting functions. For nice,
@@ -787,7 +892,7 @@ classdef WensinkField
             end
             
             if drawContacts
-                contacts = obj.calculateContacts(contactRange);
+                contacts = obj.calculateContacts();
                 for i = 1:size(contacts,1)
                     for j = 1:size(contacts{i},1)
                         x1 = obj.xCells(i);

@@ -1,4 +1,4 @@
-function expandedProfile = makeExpandedRodProfile(WensinkField,cInd,CDIrange,pxSize)
+function expandedProfile = makeExpandedRodProfile(WensinkField,cInd,pxSize)
 %Makes an elliptical image of the specified rod at the specified time,
 %expanded so you can see which neighbours are within range
 
@@ -6,9 +6,9 @@ function expandedProfile = makeExpandedRodProfile(WensinkField,cInd,CDIrange,pxS
 
 xPx = round(WensinkField.xCells(cInd)/pxSize);
 yPx = round(WensinkField.yCells(cInd)/pxSize);
-majLenPx = ((WensinkField.aCells(cInd)*WensinkField.lam)+(CDIrange*2))/(2*pxSize);
-minLenPx = (WensinkField.lam+(CDIrange*2))/(2*pxSize); %2x actual rod width
-phi = rad2deg(WensinkField.thetCells(cInd));
+majLenPx = ((WensinkField.aCells(cInd)*WensinkField.lam)+(WensinkField.contactRange*2))/(2*pxSize);
+minLenPx = (WensinkField.lam+(WensinkField.contactRange*2))/(2*pxSize); %2x actual rod width
+phi = -rad2deg(WensinkField.thetCells(cInd));
 
 %I will use a slightly more elegant strategy when rewriting this function -
 %treat the ellipse as being at the centre of the image, then use circshift

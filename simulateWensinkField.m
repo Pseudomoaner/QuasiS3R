@@ -1,4 +1,4 @@
-function [PCs,field,contactSet] = simulateWensinkField(startField,fS,dS)
+function [PCs,field,hitNos,contactSet] = simulateWensinkField(startField,fS,dS,contactFind)
 
 PCs = [];
 field = startField;
@@ -8,18 +8,22 @@ PCs = interfaceModelAndDiffusionTracker(field,PCs,1);
 fC = 0;
 
 contactSet = {};
+hitNos.new = zeros(ceil(fS.motileSteps/fS.FireSkip),1);
+hitNos.tot = zeros(ceil(fS.motileSteps/fS.FireSkip),1);
 
 %Actual simulation
 for i = 1:fS.motileSteps
-    fprintf('Frame is %i\n',i)
-    field = field.stepModel(fS.motiledt,fS.f0,fS.zElasticity,fS.growthRate,fS.divThresh,fS.postDivMovement,fS.colJigRate,dS.colourCells);
+    fprintf('Main frame is %i of %i\n',i,fS.motileSteps)
+    field = field.stepModel(fS.motiledt,fS.growthRate,fS.divThresh,fS.postDivMovement,dS.colourCells,'main');
     
     %Simulate firing events
-    if rem(i,fS.FireSkip) == 0
-        field = field.calculateHits(fS.fireRange,fS.FireSkip*fS.motiledt,fS.hitRateType);
-        field = field.killCells(fS.killThresh,fS.killType);
+    if rem(i,fS.FireSkip) == 0 && sum(field.fireCells) > 0 %Second condition prevents you from bothering with expensive calculations if no cell can fire
+        [field,hitNos.new(round(i/fS.FireSkip)),hitNos.tot(round(i/fS.FireSkip))] = field.calculateHits(fS.FireSkip*fS.motiledt);
+        field = field.killCells();
         
-        contactSet{round(i/fS.FireSkip)} = field.calculateContacts(dS.contactDist);
+        if contactFind
+            contactSet{round(i/fS.FireSkip)} = field.calculateContacts();
+        end
     end
     
     %Output visualisation
@@ -34,7 +38,7 @@ for i = 1:fS.motileSteps
                     
                     imwrite(outImg,fullImPath)                    
                 case 'plot'
-                    outAx = field.plotField(dS.posVec,dS.showContacts,dS.contactDist);
+                    outAx = field.plotField(dS.posVec,dS.showContacts);
                     export_fig(fullImPath,'-m2')
                     
                     cla(outAx)

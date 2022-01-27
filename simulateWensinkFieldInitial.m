@@ -7,9 +7,9 @@ PCs = interfaceModelAndDiffusionTracker(field,PCs,1);
 
 fC = 0;
 for i = 1:fS.motileSteps
-    fprintf('Frame is %i\n',i)
+    fprintf('Initialize frame is %i of %i\n',i,fS.motileSteps)
     
-    field = field.stepModel(fS.motiledt,fS.f0,inf,fS.growthRate,fS.divThresh,fS.postDivMovement,fS.colJigRate,dS.colourCells);
+    field = field.stepModel(fS.motiledt,fS.growthRate,fS.divThresh,fS.postDivMovement,dS.colourCells,'Initial');
     
     if rem(i,fS.FrameSkip) == 0
         if dS.saveFrames
@@ -22,7 +22,7 @@ for i = 1:fS.motileSteps
                     
                     imwrite(outImg,fullImPath)                    
                 case 'plot'
-                    outAx = field.plotField(dS.posVec,dS.showContacts,dS.contactDist);
+                    outAx = field.plotField(dS.posVec,dS.showContacts);
                     export_fig(fullImPath,'-m2')
                     
                     cla(outAx)

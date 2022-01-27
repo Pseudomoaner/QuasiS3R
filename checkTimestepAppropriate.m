@@ -7,7 +7,7 @@ frame1 = PCs.Centroid{1};
 frame2 = PCs.Centroid{2};
 
 %Choose only those cells cells that start near to the centre of the frame
-goodStartInds = and(and(frame1(:,1) < fS.fieldWidth - 5,frame1(:,1) > 5),and(frame1(:,2) < fS.fieldHeight - 5,frame1(:,2) > 5));
+goodStartInds = and(and(frame1(:,1) < fS.xWidth - 5,frame1(:,1) > 5),and(frame1(:,2) < fS.yHeight - 5,frame1(:,2) > 5));
 
 frame1 = frame1(goodStartInds,:);
 frame2 = frame2(goodStartInds,:);
