@@ -475,15 +475,13 @@ classdef WensinkField
                 case 'Hits' %Choice for debugging purposes - won't necessarily always work with all parameter settings. Assumes a firing and non-firing population.
                     maxHit = 5;
                     for k = 1:size(obj.cCells,1)
-                        if strcmp(obj.popCells(k), 'd') %Dead cells are set as gray
-                            obj.cCells(k,:) = [0.3,0.3,0.3];
+                        if strcmp(obj.popCells(k), 'd') %Dead cells are set as red shading to gray
+                            currHits = min(obj.hitCells(k),maxHit);
+                            obj.cCells(k,:) = [((currHits-1)/(maxHit-1))*0.3,1-((currHits-1)/(maxHit-1))*0.7,1-((currHits-1)/(maxHit-1))*0.7];
                         elseif obj.fireCells(k) > 0 %Firing cells are set as black
                             obj.cCells(k,:) = [1,1,1];
                         elseif obj.hitCells(k) == 0 %Unhit cells are set as light blue
                             obj.cCells(k,:) = [1,0.4,0];
-                        else
-                            currHits = min(obj.hitCells(k),maxHit);
-                            obj.cCells(k,:) = [0,0.15+(currHits/maxHit)*0.85,1];
                         end
                     end
             end
@@ -640,7 +638,7 @@ classdef WensinkField
             %system they have recieved. Any cells that exceed the specified
             %threshold are removed from the simulation (killType = lyse)
             %or become inactive 'husks' (killType = husk)
-            killInds = obj.hitCells > obj.killThresh;
+            killInds = obj.hitCells >= obj.killThresh;
 
             switch obj.killType
                 case 'lyse'

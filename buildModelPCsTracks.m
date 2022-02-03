@@ -20,7 +20,7 @@ for i = 1:size(PCs.Orientation,2)
 end
 
 %Check the size of each cell's centroid jump from one frame to the next. If it is bigger than the threshold (here the Euclidean distance between centre of the image and any corner), assume cell must have jumped due to boundary conditions
-Threshold = sqrt((fS.maxX/2).^2 + (fS.maxY/2).^2);
+Threshold = sqrt((fS.xWidth/2).^2 + (fS.yHeight/2).^2);
 
 for i = 1:size(PCs.Orientation,2)-1
     for j = 1:size(PCs.Centroid{i},1)
