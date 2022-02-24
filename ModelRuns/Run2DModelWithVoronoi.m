@@ -8,7 +8,7 @@ close all
 %Define file names etc.
 RootSim = 'C:\Users\olijm\Desktop\SeanAna\';
 reconstructionRootName = 'Channel_1';
-outputMatName = 'SimulationResults_FrozenPatchy.mat';
+outputMatName = 'SimulationResults_FrozenNonpatchy.mat';
 
 %Settings applied to entire field
 fieldSettings.xWidth = 150; %Width of the simulated domain (in units of fieldSettings.lam)
@@ -16,7 +16,7 @@ fieldSettings.yHeight = 150; %Height of the simulated domain (in units of fieldS
 fieldSettings.postDivMovement = 'reverse'; %How the daughter cell should move following cell division. Either 'reverse' (the opposite direction to the mother) or 'same' (the same direction as the mother).
 fieldSettings.fireRange = 2; %Range of the CDI system
 fieldSettings.killType = 'husk'; %Whether to remove cells from simulation after death ('lyse') or inactivate them, but leave their bodies ('husk')
-fieldSettings.killThresh = 10000; %Number of hits needed to kill a cell
+fieldSettings.killThresh = 1; %Number of hits needed to kill a cell
 fieldSettings.hitRateType = 'distributed'; %Whether CDI hits are diluted over all cells ('distributed') or the per-neighbour hit rate is kept the same regardless of the number of contacts ('constant')
 fieldSettings.growthRate = 0.0; %Average increase in aspect ratio over one unit of time.
 fieldSettings.divThresh = 8; %Aspect ratio at which the cell should divide.
@@ -40,7 +40,7 @@ cellSettings.pop = 's'; %Population label to specify which cells can kill each o
 %Settings for the patch initialization, which runs after initial active
 %configuration has been reached
 patchSettings.patchType = 'Voronoi';
-patchSettings.seedDensity = 0.001; % Number of seeds per unit area
+patchSettings.seedDensity = 1; % Number of seeds per unit area
 patchSettings.seedFrac = 0.05; % Fraction of seeds that should be associated with population 2
 patchSettings.force = 1;
 patchSettings.reversalRate = 0;
@@ -114,9 +114,12 @@ fieldSettings.motileSteps = ceil(settlingSimTime/(fieldSettings.motiledt*fieldSe
 %Setup a patch in the centre of the domain containing the second population
 intermediateField = makePatch(intermediateField,patchSettings);
 
+%Freeze the cells
+% intermediateField.fCells = zeros(size(intermediateField.xCells));
+
 %% Part 3: Do another (fully sampled) simulation for a longer period of time - only data from this simulation period will be stored
 fieldSettings.motileSteps = ceil(targetSimTime/(fieldSettings.motiledt*fieldSettings.FrameSkip))*fieldSettings.FrameSkip;
-[PCs,endField,hitNos] = simulateWensinkField(intermediateField,fieldSettings,dispSettings,contactFind);
+[PCs,endField,hitNos,contactSet] = simulateWensinkField(intermediateField,fieldSettings,dispSettings,contactFind);
 
 %% Part 4: Process data and save simulation results
 fieldSettings.dt = fieldSettings.motiledt * fieldSettings.FrameSkip;
@@ -125,4 +128,4 @@ fieldSettings.maxF = round(fieldSettings.motileSteps/fieldSettings.FrameSkip);
 [data,trackableData,toMappings,fromMappings] = processModelPCs(PCs,procSettings,fieldSettings);
 
 fullMatOut = [RootSim,filesep,outputMatName];
-save(fullMatOut,'data','trackableData','toMappings','fromMappings','fieldSettings','cellSettings','procSettings','samplingRate','startMotileDt','hitNos','endField')
+save(fullMatOut,'data','trackableData','toMappings','fromMappings','fieldSettings','cellSettings','procSettings','samplingRate','startMotileDt','hitNos','endField','contactSet')
