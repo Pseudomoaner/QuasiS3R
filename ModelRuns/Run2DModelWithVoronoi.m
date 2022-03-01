@@ -11,13 +11,13 @@ reconstructionRootName = 'Channel_1';
 outputMatName = 'SimulationResults_FrozenNonpatchy.mat';
 
 %Settings applied to entire field
-fieldSettings.xWidth = 150; %Width of the simulated domain (in units of fieldSettings.lam)
-fieldSettings.yHeight = 150; %Height of the simulated domain (in units of fieldSettings.lam)
+fieldSettings.xWidth = 200; %Width of the simulated domain (in units of fieldSettings.lam)
+fieldSettings.yHeight = 200; %Height of the simulated domain (in units of fieldSettings.lam)
 fieldSettings.postDivMovement = 'reverse'; %How the daughter cell should move following cell division. Either 'reverse' (the opposite direction to the mother) or 'same' (the same direction as the mother).
 fieldSettings.fireRange = 2; %Range of the CDI system
 fieldSettings.killType = 'husk'; %Whether to remove cells from simulation after death ('lyse') or inactivate them, but leave their bodies ('husk')
 fieldSettings.killThresh = 1; %Number of hits needed to kill a cell
-fieldSettings.hitRateType = 'distributed'; %Whether CDI hits are diluted over all cells ('distributed') or the per-neighbour hit rate is kept the same regardless of the number of contacts ('constant')
+fieldSettings.hitRateType = 'constant'; %Whether CDI hits are diluted over all cells ('distributed') or the per-neighbour hit rate is kept the same regardless of the number of contacts ('constant')
 fieldSettings.growthRate = 0.0; %Average increase in aspect ratio over one unit of time.
 fieldSettings.divThresh = 8; %Aspect ratio at which the cell should divide.
 fieldSettings.areaFrac = 0.35; %Fraction of the total area that should be occupied by cells.
@@ -40,13 +40,14 @@ cellSettings.pop = 's'; %Population label to specify which cells can kill each o
 %Settings for the patch initialization, which runs after initial active
 %configuration has been reached
 patchSettings.patchType = 'Voronoi';
-patchSettings.seedDensity = 1; % Number of seeds per unit area
-patchSettings.seedFrac = 0.05; % Fraction of seeds that should be associated with population 2
+patchSettings.seedDensity = 0.0003; % Number of seeds per unit area
+patchSettings.seedFrac = 0.1; % Fraction of seeds that should be associated with population 2
 patchSettings.force = 1;
 patchSettings.reversalRate = 0;
 patchSettings.colour = [0,0.5,1];
 patchSettings.fireRate = 0.02;
 patchSettings.popLabel = 't';
+patchSettings.tol = 0.05; %Tolerance for actual population fraction (real value guaranteed between seedFrac or fraction - for 'Voronoi' and 'Circle' patch types respectively - plus/minus fraction * tol)
 
 %Output settings
 dispSettings.saveFrames = true; %Whether or not to save visualisations of each sampled timepoint
@@ -71,7 +72,7 @@ startMotileDt = 0.1; %Size of the motility timestep (to begin with)
 firingDt = 1; %Size of the timestep for calculating firing events
 samplingRate = 5.0; %How frequently samples of the simulation should be taken
 burnInSimTime = 0;
-settlingSimTime = 200; %How long it will take for the simulation to settle into an active configuration
+settlingSimTime = 5; %How long it will take for the simulation to settle into an active configuration
 targetSimTime = 500; %Target motile simulation time
 contactFind = false; %Whether or not to return structures containing instantaneous cell-cell contact data
 
@@ -112,7 +113,7 @@ fieldSettings.motileSteps = ceil(settlingSimTime/(fieldSettings.motiledt*fieldSe
 [~,intermediateField] = simulateWensinkFieldInitial(startField,fieldSettings,dispSettings);
 
 %Setup a patch in the centre of the domain containing the second population
-intermediateField = makePatch(intermediateField,patchSettings);
+intermediateFieldTmp = makePatch(intermediateField,patchSettings);
 
 %Freeze the cells
 % intermediateField.fCells = zeros(size(intermediateField.xCells));

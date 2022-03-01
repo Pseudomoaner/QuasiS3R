@@ -64,6 +64,10 @@ switch patchSettings.patchType
         seedsY = rand(noSeeds,1)*inField.yHeight;
         tmpSeeds = [zeros(noSeeds2,1);ones(noSeeds1,1)];
         popLabels = tmpSeeds(randperm(noSeeds)); %0 indicates pop 2, 1 pop 1
+
+        if noSeeds1 == 0 && patchSettings.seedFrac ~= 0
+            error('Seeding density is too low for any attackers to be initialized. Try increasing domain size.')
+        end
         
         %Create a tiling of these initial seeds so the resulting Voronoi
         %diagram is periodic
@@ -73,6 +77,32 @@ switch patchSettings.patchType
 
         DT = delaunayTriangulation([seedsX,seedsY]);
         nearestSeeds = nearestNeighbor(DT,inField.xCells,inField.yCells);
+        
+        noPop1 = sum(popLabels(nearestSeeds));
+        realFrac = noPop1/numel(nearestSeeds);
+
+        tooMany = realFrac > patchSettings.seedFrac + (patchSettings.seedFrac * patchSettings.tol);
+        tooFew = realFrac < patchSettings.seedFrac - (patchSettings.seedFrac * patchSettings.tol);
+
+        while tooMany || tooFew
+            seedsX = rand(noSeeds,1)*inField.xWidth;
+            seedsY = rand(noSeeds,1)*inField.yHeight;
+
+            popLabels = tmpSeeds(randperm(noSeeds)); %0 indicates pop 2, 1 pop 1
+
+            seedsX = [seedsX;seedsX;seedsX;seedsX - inField.xWidth;seedsX - inField.xWidth;seedsX - inField.xWidth;seedsX + inField.xWidth;seedsX + inField.xWidth;seedsX + inField.xWidth];
+            seedsY = [seedsY;seedsY - inField.yHeight;seedsY + inField.yHeight;seedsY;seedsY - inField.yHeight;seedsY + inField.yHeight;seedsY;seedsY - inField.yHeight;seedsY + inField.yHeight];
+            popLabels = repmat(popLabels,9,1);
+
+            DT = delaunayTriangulation([seedsX,seedsY]);
+            nearestSeeds = nearestNeighbor(DT,inField.xCells,inField.yCells);
+
+            noPop1 = sum(popLabels(nearestSeeds));
+            realFrac = noPop1/numel(nearestSeeds);
+
+            tooMany = realFrac > patchSettings.seedFrac + (patchSettings.seedFrac * patchSettings.tol);
+            tooFew = realFrac < patchSettings.seedFrac - (patchSettings.seedFrac * patchSettings.tol);
+        end
 
         for i = 1:size(inField.xCells,1)
             if popLabels(nearestSeeds(i))
