@@ -33,7 +33,7 @@ for i = 1:size(twigs,2)
     xlabel('Time')
     ylabel('Mixed toxic/sensitive contacts:total toxic contacts')
     
-    save([root,filesep,branch,twigs{i},'_ContactFracs',extension],'wellMixedFrac','yfit')
+    save([root,filesep,branch,twigs{i},'_ContactFracs',extension],'wellMixedFrac','yfit','stotContactFrac','ttosContactFrac')
     
     yfit.c
     pause(0.1)
