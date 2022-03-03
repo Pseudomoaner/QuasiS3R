@@ -50,7 +50,7 @@ patchSettings.popLabel = 't';
 patchSettings.tol = 0.05; %Tolerance for actual population fraction (real value guaranteed between seedFrac or fraction - for 'Voronoi' and 'Circle' patch types respectively - plus/minus fraction * tol)
 
 %Output settings
-dispSettings.saveFrames = true; %Whether or not to save visualisations of each sampled timepoint
+dispSettings.saveFrames = false; %Whether or not to save visualisations of each sampled timepoint
 dispSettings.ImgPath = 'Frame_%04d.tif'; %Generic name for each output frame (will be fed into sprintf, so use appropriate string formatting)
 dispSettings.colourCells = 'Hits'; %How rods should be recoloured at each sampling point. If set to 'None', will retain any previously set colour.
 dispSettings.saveType = 'draw'; %Type of method used to visualise rods - either 'plot' or 'draw'. 'plot' will produce and save a Matlab figure, while 'draw' will draw ellipses directly into an image.
@@ -72,7 +72,7 @@ startMotileDt = 0.1; %Size of the motility timestep (to begin with)
 firingDt = 1; %Size of the timestep for calculating firing events
 samplingRate = 5.0; %How frequently samples of the simulation should be taken
 burnInSimTime = 0;
-settlingSimTime = 5; %How long it will take for the simulation to settle into an active configuration
+settlingSimTime = 200; %How long it will take for the simulation to settle into an active configuration
 targetSimTime = 500; %Target motile simulation time
 contactFind = false; %Whether or not to return structures containing instantaneous cell-cell contact data
 
@@ -113,7 +113,7 @@ fieldSettings.motileSteps = ceil(settlingSimTime/(fieldSettings.motiledt*fieldSe
 [~,intermediateField] = simulateWensinkFieldInitial(startField,fieldSettings,dispSettings);
 
 %Setup a patch in the centre of the domain containing the second population
-intermediateFieldTmp = makePatch(intermediateField,patchSettings);
+intermediateField = makePatch(intermediateField,patchSettings);
 
 %Freeze the cells
 % intermediateField.fCells = zeros(size(intermediateField.xCells));

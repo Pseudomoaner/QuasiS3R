@@ -16,14 +16,15 @@ for i = 1:size(twigs,2)
     [stotContactFrac,ttosContactFrac] = calculateContactFracs(trackableData,fieldSettings); %stotContactFrac means sensitive to toxic contact fraction, and vica versa for ttosContactFrac
 
     wellMixedFrac = sum(trackableData.Population{1} == 's')/size(trackableData.Population{1},1); %Expected final value of ttosContactFrac
+    expCorr = (2*sqrt(patchSettings.seedDensity)*fieldSettings.lam-1); %Correction factor to account that the initial contact fraction won't be exactly 0.
     
     %Find best fit exponential mixing rate
     time = fieldSettings.dt*(0:size(trackableData.Population,2)-1);
 
-    ft = fittype('a*(1-exp(-b*x))','problem','a');
-    [yfit, gof] = fit(time',ttosContactFrac',ft,'problem',wellMixedFrac,'StartPoint',0.1);
+    ft = fittype('a*(1+b*exp(-c*x))','problem',{'a','b'});
+    [yfit, gof] = fit(time',ttosContactFrac',ft,'problem',{wellMixedFrac,expCorr},'StartPoint',0.1);
 
-    rateStore(i) = yfit.b;
+    rateStore(i) = yfit.c;
     
     %Plot the results (can comment out for batch analysis)
     plot(yfit)
@@ -34,6 +35,6 @@ for i = 1:size(twigs,2)
     
     save([root,filesep,branch,twigs{i},'_ContactFracs',extension],'wellMixedFrac','yfit')
     
-    yfit.b
+    yfit.c
     pause(0.1)
 end
