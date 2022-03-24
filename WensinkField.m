@@ -475,13 +475,14 @@ classdef WensinkField
                 case 'Hits' %Choice for debugging purposes - won't necessarily always work with all parameter settings. Assumes a firing and non-firing population.
                     maxHit = 5;
                     for k = 1:size(obj.cCells,1)
-                        if strcmp(obj.popCells(k), 'd') %Dead cells are set as red shading to gray
+                        if strcmp(obj.popCells(k), 'd') %Dead cells are set as magenta shading to gray
                             currHits = min(obj.hitCells(k),maxHit);
-                            obj.cCells(k,:) = [((currHits-1)/(maxHit-1))*0.3,1-((currHits-1)/(maxHit-1))*0.7,1-((currHits-1)/(maxHit-1))*0.7];
-                        elseif obj.fireCells(k) > 0 %Firing cells are set as black
-                            obj.cCells(k,:) = [1,1,1];
-                        elseif obj.hitCells(k) == 0 %Unhit cells are set as light blue
-                            obj.cCells(k,:) = [1,0.4,0];
+                            colFac = currHits/(maxHit+0.5);
+                            obj.cCells(k,:) = 1-[0.9,colFac*0.9,0.4+colFac*0.5];
+                        elseif obj.fireCells(k) > 0 %Firing cells are set as light blue
+                            obj.cCells(k,:) = 1-([32,128,196]/255);
+                        elseif obj.hitCells(k) == 0 %Unhit cells are set as yellow
+                            obj.cCells(k,:) = 1-([255, 190, 11]/255);
                         end
                     end
             end
@@ -793,6 +794,9 @@ classdef WensinkField
             Upsample = 20; %Extent to which the 'design' image should be interpolated to create smoother graphics.
             Downsample = 5; %Extent to which the final image should be scaled down to save space.
             fullSF = Upsample * obj.resUp; %Extent to which the ellipse images should be blown up.
+
+            majorBoost = 0.2; %Extra factor by which to make cells longer for rendering purposes
+            minorBoost = 0.1; %Extra factor by which to make cells wider for rendering purposes
             
 %             hand = figure(1);
 %             set(hand, 'Units', 'pixels', 'Position', posVec);
@@ -816,9 +820,9 @@ classdef WensinkField
             
             %Do separate paintjobs for each of the three colour
             %channels
-            imgr = paintEllipse(imgr,obj.xCells,obj.yCells,obj.aCells/2,obj.lam*ones(size(obj.aCells))/2,-rad2deg(obj.thetCells),obj.cCells(:,1),1/fullSF,obj.boundConds,obj.xWidth,obj.yHeight);
-            imgg = paintEllipse(imgg,obj.xCells,obj.yCells,obj.aCells/2,obj.lam*ones(size(obj.aCells))/2,-rad2deg(obj.thetCells),obj.cCells(:,2),1/fullSF,obj.boundConds,obj.xWidth,obj.yHeight);
-            imgb = paintEllipse(imgb,obj.xCells,obj.yCells,obj.aCells/2,obj.lam*ones(size(obj.aCells))/2,-rad2deg(obj.thetCells),obj.cCells(:,3),1/fullSF,obj.boundConds,obj.xWidth,obj.yHeight);
+            imgr = paintEllipse(imgr,obj.xCells,obj.yCells,(obj.aCells/2)+majorBoost,(obj.lam*ones(size(obj.aCells))/2)+minorBoost,-rad2deg(obj.thetCells),obj.cCells(:,1),1/fullSF,obj.boundConds,obj.xWidth,obj.yHeight);
+            imgg = paintEllipse(imgg,obj.xCells,obj.yCells,(obj.aCells/2)+majorBoost,(obj.lam*ones(size(obj.aCells))/2)+minorBoost,-rad2deg(obj.thetCells),obj.cCells(:,2),1/fullSF,obj.boundConds,obj.xWidth,obj.yHeight);
+            imgb = paintEllipse(imgb,obj.xCells,obj.yCells,(obj.aCells/2)+majorBoost,(obj.lam*ones(size(obj.aCells))/2)+minorBoost,-rad2deg(obj.thetCells),obj.cCells(:,3),1/fullSF,obj.boundConds,obj.xWidth,obj.yHeight);
             
             %Smooth to make nicer looking
             imgr = imgaussfilt(imgr,fullSF*obj.lam/4);

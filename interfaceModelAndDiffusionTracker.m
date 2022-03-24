@@ -11,3 +11,5 @@ TrackableData.Centroid{FrameNo} = [Field.xCells,Field.yCells,Field.zCells];
 TrackableData.Tilt{FrameNo} = Field.phiCells;
 TrackableData.Force{FrameNo} = Field.fCells;
 TrackableData.Population{FrameNo} = Field.popCells;
+TrackableData.Hit{FrameNo} = Field.hitCells;
+TrackableData.FireRate{FrameNo} = Field.fireCells;

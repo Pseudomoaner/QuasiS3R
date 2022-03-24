@@ -6,6 +6,8 @@ PCs.Length = PCs.Length(pS.startTime:end);
 PCs.Tilt = PCs.Tilt(pS.startTime:end);
 PCs.Force = PCs.Force(pS.startTime:end);
 PCs.Population = PCs.Population(pS.startTime:end);
+PCs.Hit = PCs.Hit(pS.startTime:end);
+PCs.FireRate = PCs.FireRate(pS.startTime:end);
 
 %Build tracks
 [Tracks,Initials] = buildModelPCsTracks(PCs,fS);
@@ -16,6 +18,8 @@ CentroidTracks = extractModelDataTrack(Tracks,Initials,PCs.Centroid);
 TiltTracks = extractModelDataTrack(Tracks,Initials,PCs.Tilt);
 ForceTracks = extractModelDataTrack(Tracks,Initials,PCs.Force);
 PopulationTracks = extractModelDataTrack(Tracks,Initials,PCs.Population);
+HitTracks = extractModelDataTrack(Tracks,Initials,PCs.Hit);
+FireTracks = extractModelDataTrack(Tracks,Initials,PCs.FireRate);
 
 disp('Tracked...')
 
@@ -41,6 +45,8 @@ OrientationTracks(lengthDist < pS.minTrackLength) = [];
 TiltTracks(lengthDist < pS.minTrackLength) = [];
 ForceTracks(lengthDist < pS.minTrackLength) = [];
 PopulationTracks(lengthDist < pS.minTrackLength) = [];
+HitTracks(lengthDist < pS.minTrackLength) = [];
+FireTracks(lengthDist < pS.minTrackLength) = [];
 RawSpeed(lengthDist < pS.minTrackLength) = [];
 RawPhi(lengthDist < pS.minTrackLength) = [];
 SmoothSpeed(lengthDist < pS.minTrackLength) = [];
@@ -70,6 +76,8 @@ for i = 1:length(OrientationTracks)
     data(i).majorLen = LengthTracks{i};
     data(i).force = ForceTracks{i};
     data(i).population = PopulationTracks{i};
+    data(i).hits = HitTracks{i};
+    data(i).fireRate = FireTracks{i};
 %     data(i).reverse = Reversals{i};
 end
 
@@ -80,6 +88,8 @@ trackableData.Length = PCs.Length;
 trackableData.Tilt = PCs.Tilt;
 trackableData.Force = PCs.Force;
 trackableData.Population = PCs.Population;
+trackableData.Hit = PCs.Hit;
+trackableData.FireRate = PCs.FireRate;
 
 %And convert phi to be consistant with other data extraction (actually ends up inverted so you have to take the negative later, but better than having to reprocess all those films)
 for i = 1:length(data)
