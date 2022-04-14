@@ -11,8 +11,8 @@ reconstructionRootName = 'Channel_1';
 outputMatName = 'SimulationResults_FrozenNonpatchy.mat';
 
 %Settings applied to entire field
-fieldSettings.xWidth = 200; %Width of the simulated domain (in units of fieldSettings.lam)
-fieldSettings.yHeight = 200; %Height of the simulated domain (in units of fieldSettings.lam)
+fieldSettings.xWidth = 150; %Width of the simulated domain (in units of fieldSettings.lam)
+fieldSettings.yHeight = 150; %Height of the simulated domain (in units of fieldSettings.lam)
 fieldSettings.postDivMovement = 'reverse'; %How the daughter cell should move following cell division. Either 'reverse' (the opposite direction to the mother) or 'same' (the same direction as the mother).
 fieldSettings.fireRange = 2; %Range of the CDI system
 fieldSettings.killType = 'husk'; %Whether to remove cells from simulation after death ('lyse') or inactivate them, but leave their bodies ('husk')
@@ -40,7 +40,7 @@ cellSettings.pop = 's'; %Population label to specify which cells can kill each o
 %Settings for the patch initialization, which runs after initial active
 %configuration has been reached
 patchSettings.patchType = 'Voronoi';
-patchSettings.seedDensity = 0.0003; % Number of seeds per unit area
+patchSettings.seedDensity = 0.003; % Number of seeds per unit area
 patchSettings.seedFrac = 0.1; % Fraction of seeds that should be associated with population 2
 patchSettings.force = 1;
 patchSettings.reversalRate = 0;
@@ -50,7 +50,7 @@ patchSettings.popLabel = 't';
 patchSettings.tol = 0.05; %Tolerance for actual population fraction (real value guaranteed between seedFrac or fraction - for 'Voronoi' and 'Circle' patch types respectively - plus/minus fraction * tol)
 
 %Output settings
-dispSettings.saveFrames = false; %Whether or not to save visualisations of each sampled timepoint
+dispSettings.saveFrames = true; %Whether or not to save visualisations of each sampled timepoint
 dispSettings.ImgPath = 'Frame_%04d.tif'; %Generic name for each output frame (will be fed into sprintf, so use appropriate string formatting)
 dispSettings.colourCells = 'Hits'; %How rods should be recoloured at each sampling point. If set to 'None', will retain any previously set colour.
 dispSettings.saveType = 'draw'; %Type of method used to visualise rods - either 'plot' or 'draw'. 'plot' will produce and save a Matlab figure, while 'draw' will draw ellipses directly into an image.

@@ -27,7 +27,7 @@ Width = inField.xWidth;
 lam = inField.lam;
 U0 = inField.U0;
 
-includeMat = inField.cellDists < inField.distThresh;
+includeMat = inField.cellDistsBiophys < inField.distThresh;
 includeMat(logical(diag(ones(length(includeMat),1)))) = 0;
 includeMat = includeMat(1:length(inField.nCells),:); %Alpha rods should include all cells, beta rods all cells and all barrier rods
 

@@ -9,7 +9,7 @@ root = 'C:\Users\olijm\Google Drive\CDI_modelling\fire3';
 branch = 'simulationResults_ContactData_F';
 twigs = {'0pt5.mat','0pt625.mat','0pt75.mat','0pt875.mat','1.mat','1pt125.mat','1pt25.mat','1pt375.mat','1pt5.mat','1pt625.mat','1pt75.mat','1pt875.mat','2.mat'};
 
-lenThresh = 91; % Threshold below which the tail of very transient contacts gets cut off in the curve fitting part of the algorithm. These don't fit the exponential model well
+lenThresh = 41; % Threshold below which the tail of very transient contacts gets cut off in the curve fitting part of the algorithm. These don't fit the exponential model well
 
 figure(1)
 ax1 = gca;

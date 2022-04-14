@@ -29,8 +29,11 @@ classdef WensinkField
         nBarr %This is not the most elegant solution, but allows us to recycle the code for rod-rod interactions more easily.
         lBarr
         
-        cellDists %Distance between all cells. Indexed in same way as obj.cells.
-        distThresh %Distance between cells, beyond which interactions are too weak to be relevant. 
+        cellDistsBiophys %Distance between all cells. Indexed in same way as obj.cells.
+        cellDistsContact %Distance between all cells. Used for CDI calculations, rather than biophysics.
+        distThresh %Distance between cells, beyond which biophysical interactions are too weak to be relevant. 
+        contactThresh %Distance between cells, beyond which CDI cannot occur.
+
         U0 %Potential Amplitude
         f0 %Stoksian friction coefficient
         zElasticity %Elasticity of the confining material in the z-direction
@@ -395,20 +398,22 @@ classdef WensinkField
             areaFrac = sum([arCritCells; arSubCritCells])/totArea;
         end
         
-        function obj = calcDistMat(obj)
-            if strcmp(obj.boundConds,'periodic')
-                obj.cellDists = calcGriddedDistMat(obj,true);
+        function obj = calcDistMat(obj,contact)
+            obj = obj.calcDistThresh(contact);
+
+            if contact
+                obj.cellDistsContact = calcGriddedDistMat(obj,strcmp(obj.boundConds,'periodic'));
             else
-                obj.cellDists = calcGriddedDistMat(obj,false);
+                obj.cellDistsBiophys = calcGriddedDistMat(obj,strcmp(obj.boundConds,'periodic'));
             end
         end
         
-        function obj = calcDistThresh(obj)
+        function obj = calcDistThresh(obj,contact)
             %Calculates the distance threshold below which interactions will be ignored. Based on the longest cell.
-            foo = ((obj.nCells - 1) .* obj.lCells);
+            foo = ((obj.nCells - 1) .* obj.lCells) + contact*obj.contactRange;
             maxLen = max(foo); %Length of the longest cell
-            
-            obj.distThresh = maxLen + obj.lam + log(obj.U0); %Use of log(U0) here is somewhat justified by the exponential drop off in repelling strength. But not terribly. Use cautiously.
+
+            obj.distThresh = maxLen + obj.lam + ~contact*log(obj.U0); %Use of log(U0) here is somewhat justified by the exponential drop off in repelling strength. But not terribly. Use cautiously.
         end
         
         function obj = growAndDivide(obj,growthRate,dt,divThresh,postMovement)
@@ -566,6 +571,24 @@ classdef WensinkField
         function contacts = calculateContacts(obj)
             %Calculates a list of cells that are touching each other, as
             %defined in the CDI hit detection code.
+%             obj = obj.calcDistMat(true);
+% 
+%             contactMat = zeros(size(obj.xCells,1));
+%             for i = 1:size(obj.xCells,1)
+%                 for j = (i+1):size(obj.xCells,1)
+%                     if ~isnan(obj.cellDistsContact(i,j))
+%                         contactMat(i,j) = testEllipseCollision(obj,i,j);
+%                         contactMat(j,i) = contactMat(i,j);
+%                     end
+%                 end
+%             end
+% 
+%             contacts = cell(size(obj.xCells,1),1);
+%             for i = 1:size(obj.xCells,1)
+%                 contacts{i} = find(contactMat(:,i));
+%             end
+%             %Calculates a list of cells that are touching each other, as
+%             %defined in the CDI hit detection code.
             pxSize = 0.25; %Granularity of the pixel-based approach for calculating elliptical neighbourhoods. Set smaller to improve resolution of approach.
             contacts = cell(size(obj.xCells,1),1);
             
@@ -592,10 +615,10 @@ classdef WensinkField
             %than the hit rate, so a maximum of one hit per timepoint (per
             %cell-cell interaction) is applied.
             pxSize = 0.25; %Granularity of the pixel-based approach for calculating elliptical neighbourhoods. Set smaller to improve resolution of approach.
-            
+
             %Begin by creating an image of the indices of each cell
             indexImg = paintOverlapField(obj,pxSize);
-            
+
             %Now step through each rod, and find which other rods it is
             %within CDI range of. Apply hits to these probabilistically,
             %based on the focal rod's firing rate.
@@ -604,11 +627,25 @@ classdef WensinkField
             for i = 1:size(obj.xCells,1)
                 if obj.fireCells(i) > 0 %If this is an attacker
                     expandImg = makeExpandedRodProfile(obj,i,pxSize);
-                    
+
                     contactInds = unique(indexImg(expandImg));
                     contactInds(contactInds == 0) = [];
                     contactInds(contactInds == i) = [];
-                                       
+
+%             obj = obj.calcDistMat(true);
+% 
+%             for i = 1:size(obj.xCells,1)
+%                 if obj.fireCells(i) > 0 %If this is an attacker
+%                     
+%                     contactInds = [];
+%                     for j = 1:size(obj.xCells)
+%                         if i ~= j && ~isnan(obj.cellDistsContact)
+%                             if testEllipseCollision(obj,i,j)
+%                                 contactInds = [contactInds;j];
+%                             end
+%                         end
+%                     end
+
                     switch obj.hitRateType
                         case 'distributed'
                             hitProb = obj.fireCells(i)*dt/numel(contactInds);
@@ -618,7 +655,7 @@ classdef WensinkField
 
                     hitEvts = rand(size(contactInds)) < hitProb;
                     hitInds = contactInds(hitEvts);
-                    
+
                     %This bit of code prevents you from accumulating hits
                     %from cells of the same population - effectively
                     %simulating cognate immunity gene expression
@@ -628,7 +665,7 @@ classdef WensinkField
 
                     hitNoNew = hitNoNew + sum(obj.hitCells(hitInds) == 0); %Total number of cells that have never been hit that are about to be hit for the first time
                     hitNoTot = hitNoTot + size(hitInds,1); %Total number of hits applied by this attacker cell to sensitive cells
-                    
+
                     obj.hitCells(hitInds) = obj.hitCells(hitInds) + 1;
                 end
             end
@@ -660,7 +697,7 @@ classdef WensinkField
                     obj.fireCells(killInds) = [];
                     obj.popCells(killInds) = [];
                     
-                    obj = obj.calcDistMat();
+                    obj = obj.calcDistMat(false);
                 case 'husk'
                     %Inactivate all active behaviours of killed cells
                     obj.fCells(killInds) = 0;
@@ -714,11 +751,8 @@ classdef WensinkField
             %Increases the time by one step, updating cell positions based on their current velocities.
             
             %Calculate distance matrix and threshold if needed (e.g. for first time point)
-            if isempty(obj.distThresh)
-                obj = obj.calcDistThresh();
-            end
-            if isempty(obj.cellDists)
-                obj = obj.calcDistMat();
+            if isempty(obj.cellDistsBiophys)
+                obj = obj.calcDistMat(false);
             end
                
             %Need to re-calculate distance threshold at each step. May change as cells grow.
@@ -756,8 +790,7 @@ classdef WensinkField
             obj = obj.setColours(colourCells);
             
             %Calculate distance matrix. Allows elimination of small-intensity interactions at later time points.
-            obj = obj.calcDistThresh();
-            obj = obj.calcDistMat();
+            obj = obj.calcDistMat(false);
         end
         
         function obj = moveCells(obj,drdt,dthetadt,dphidt,timeStep)
@@ -901,11 +934,26 @@ classdef WensinkField
                         y1 = obj.yCells(i);
                         y2 = obj.yCells(contacts{i}(j));
                         x2 = obj.xCells(contacts{i}(j));
-                        if abs(x1-x2) < 10 && abs(y1-y2) < 10
-                            plot(x1,y1,'w.','MarkerSize',15)
-                            plot(x2,y2,'w.','MarkerSize',15)
-                            plot([x1,x2],[y1,y2],'k','LineWidth',1.5)
+
+                        if abs(x1-x2) > obj.xWidth/2
+                            if x1 < x2
+                                x1 = x1 + obj.xWidth;
+                            else
+                                x2 = x2 + obj.xWidth;
+                            end
                         end
+
+                        if abs(y1-y2) > obj.yHeight/2
+                            if y1 < y2
+                                y1 = y1 + obj.yHeight;
+                            else
+                                y2 = y2 + obj.yHeight;
+                            end
+                        end
+
+                        plot(x1,y1,'w.','MarkerSize',15)
+                        plot(x2,y2,'w.','MarkerSize',15)
+                        plot([x1,x2],[y1,y2],'k','LineWidth',1.5)
                     end
                 end
             end
