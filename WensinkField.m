@@ -480,8 +480,8 @@ classdef WensinkField
                 case 'Hits' %Choice for debugging purposes - won't necessarily always work with all parameter settings. Assumes a firing and non-firing population.
                     maxHit = 5;
                     for k = 1:size(obj.cCells,1)
-                        if strcmp(obj.popCells(k), 'd') %Dead cells are set as magenta shading to gray
-                            currHits = min(obj.hitCells(k),maxHit);
+                        currHits = min(obj.hitCells(k),maxHit);
+                        if currHits > 0 %Dead cells are set as magenta shading to gray
                             colFac = currHits/(maxHit+0.5);
                             obj.cCells(k,:) = 1-[0.9,colFac*0.9,0.4+colFac*0.5];
                         elseif obj.fireCells(k) > 0 %Firing cells are set as light blue
