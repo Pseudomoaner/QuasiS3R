@@ -12,6 +12,10 @@ for i = 1:size(outputDirNames,2)
     atseConts = zeros(size(contactSet));
     athitConts = zeros(size(contactSet));
     
+    atFracs = cellfun(@(x)sum(x == 't'),trackableData.Population)/size(trackableData.Population{1},1);
+    seFracs = cellfun(@(x)sum(x == 0),trackableData.Hit)/size(trackableData.Hit{1},1) - atFracs;
+    hitFracs = cellfun(@(x)sum(x > 0),trackableData.Hit)/size(trackableData.Hit{1},1);
+    
     for t = 1:size(contactSet,2)
         for j = 1:size(contactSet{t},1)
             if trackableData.FireRate{t}(j) > 0
@@ -32,13 +36,21 @@ for i = 1:size(outputDirNames,2)
     hold on
     
     %Attacker-attacker contacts
-    plot(atatConts./totConts,'Color',[32,128,196]/255,'LineWidth',1.5)
+    plot(atatConts./totConts,'--','Color',[32,128,196]/255,'LineWidth',1.5)
     %Attacker-sensitive contacts
-    plot(atseConts./totConts,'Color',[255, 190, 11]/255,'LineWidth',1.5)
+    plot(atseConts./totConts,'--','Color',[255, 120, 10]/255,'LineWidth',1.5)
     %Attacker-hit contacts
-    plot(athitConts./totConts,'Color',[0.9,0,0.4],'LineWidth',1.5)
+    plot(athitConts./totConts,'--','Color',[1,0.85,0.75],'LineWidth',1.5)
+    
+    %Attacker fractions
+    plot(atFracs,'Color',[32,128,196]/255,'LineWidth',1.5)
+    %Sensitives fractions
+    plot(seFracs,'Color',[255, 120, 10]/255,'LineWidth',1.5)
+    %Hit fractions
+    plot(hitFracs,'Color',[1,0.85,0.75],'LineWidth',1.5)
     
     ax = gca;
     ax.LineWidth = 1.5;
     ax.Box = 'on';
+    axis([0,1000,0,1])
 end
