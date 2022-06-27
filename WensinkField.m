@@ -721,8 +721,7 @@ classdef WensinkField
         
         function [drdt,dthetadt,dphidt] = calcVelocities(obj,stepType)
             %Calculates the rate of translation and rotation for all cells             
-            [fT,fR] = calcFrictionTensors(obj.aCells,obj.uCells,obj.f0);
-            [fPar,~,~] = calcGeomFactors(obj.aCells);
+            [fT,fR,fPar] = calcFrictionTensors(obj.aCells,obj.uCells,obj.f0,obj.frictionType);
             
             %I will provide three methods for calculating the potential
             %between rods (the slowest part of the model). Option 1, the

@@ -39,6 +39,7 @@ cellSettings.pop = 's'; %Population label to specify which cells can kill each o
 
 %Settings for the patch initialization, which runs after initial active
 %configuration has been reached
+patchSettings.patchType = 'Circle';
 patchSettings.fraction = 0.2; %Fraction of rods that should belong to the second population (be part of the patch)
 patchSettings.tol = 0.01; %Tolerance for how accurate the patch size should match the specified population fraction. Radius accepted if actual fraction is within range patchSettings.fraction +/- patchSettings.fraction*patchSettings.tol.
 patchSettings.force = 1; %Force applied by cells within the patch
@@ -50,7 +51,7 @@ patchSettings.popLabel = 't'; %Population label of cells in patch
 %Output settings
 dispSettings.saveFrames = true; %Whether or not to save visualisations of each sampled timepoint
 dispSettings.ImgPath = 'Frame_%04d.tif'; %Generic name for each output frame (will be fed into sprintf, so use appropriate string formatting)
-dispSettings.colourCells = 'Hits'; %How rods should be recoloured at each sampling point. If set to 'None', will retain any previously set colour.
+dispSettings.colourCells = 'None'; %How rods should be recoloured at each sampling point. If set to 'None', will retain any previously set colour.
 dispSettings.saveType = 'draw'; %Type of method used to visualise rods - either 'plot' or 'draw'. 'plot' will produce and save a Matlab figure, while 'draw' will draw ellipses directly into an image.
 dispSettings.imagedirectory = [RootSim,filesep,'ColourCells']; %Defines where the output images will be located
 if ~exist(dispSettings.imagedirectory,'dir') %Set up visualisation directory

@@ -1,4 +1,4 @@
-function [fT,fR] = calcFrictionTensors(a,u,f0,fricType)
+function [fT,fR,fPar] = calcFrictionTensors(a,u,f0,fricType)
 %CALCFRICTIONTENSORS calculates the translational and rotational friction 
 %tensors for each rod.
 %
@@ -13,6 +13,8 @@ function [fT,fR] = calcFrictionTensors(a,u,f0,fricType)
 %   OUTPUTS:
 %       -fT: The translational friction tensor for each rod
 %       -fR: The rotational friction tensor for each rod
+%       -fPar: The parallel component of the friction tensor for each rod
+%       (used in velocity calculations)
 %
 %   Author: Oliver J. Meacock, 2020
 
