@@ -36,6 +36,7 @@ classdef WensinkField
 
         U0 %Potential Amplitude
         f0 %Stoksian friction coefficient
+        frictionType %What kind of frictional force should be applied to the rods (isotropic or anisotropic)
         zElasticity %Elasticity of the confining material in the z-direction
         lam %Screening length of Yukawa segements
         contactRange %Range of CDI system
@@ -53,7 +54,7 @@ classdef WensinkField
     end
     methods
         function obj = WensinkField(fS)
-            inputCheck = isfield(fS,{'xWidth','yHeight','zDepth','U0','lam','boundaryConditions','f0','zElasticity','contactRange','killType','hitRateType','colJigRate','killThresh'});
+            inputCheck = isfield(fS,{'xWidth','yHeight','zDepth','U0','lam','boundaryConditions','f0','zElasticity','contactRange','killType','hitRateType','colJigRate','killThresh','frictionType'});
 
             %Check and store domain size settings
             if ~inputCheck(1) || ~inputCheck(2) %Must have the domain size
@@ -162,6 +163,17 @@ classdef WensinkField
                 obj.killThresh = fS.killThresh;
             else
                 obj.killThresh = 1;
+            end
+
+            if inputCheck(14)
+                validateattributes(fS.frictionType,{'char'},{'scalartext'})
+                if ~any(strcmp({'isotropic','anisotropic'},fS.frictionType))
+                    error('Expected friction type to be specified as either "isotropic" or "anisotropic".')
+                else
+                    obj.frictionType = fS.frictionType;
+                end
+            else
+                obj.frictionType = 'anisotropic';
             end
 
             %Check to see if GPU and/or .mex files are available for

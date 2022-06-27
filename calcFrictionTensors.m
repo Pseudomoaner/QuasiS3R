@@ -1,6 +1,28 @@
-function [fT,fR] = calcFrictionTensors(a,u,f0)
-%Calculates the translational and rotational friction tensors for each cell.
+function [fT,fR] = calcFrictionTensors(a,u,f0,fricType)
+%CALCFRICTIONTENSORS calculates the translational and rotational friction 
+%tensors for each rod.
+%
+%   INPUTS:
+%       -a: The aspect ratios of all the rods
+%       -u: The orientation unit vectors of all the rods
+%       -f0: The Stokesian friction coefficient
+%       -fricType: Specifies whether the current simulation contains
+%       isotropic or anisotropic translational friction for individual
+%       rods.
+%
+%   OUTPUTS:
+%       -fT: The translational friction tensor for each rod
+%       -fR: The rotational friction tensor for each rod
+%
+%   Author: Oliver J. Meacock, 2020
+
 [fPar,fPerp,fRot] = calcGeomFactors(a);
+
+if strcmp(fricType,'isotropic')
+    fPar = (fPar + fPerp)/2; %Take the mean of the two components for each rod
+    fPerp = fPar;
+end
+
 fR = f0 * fRot;
 fT = zeros(3,3,size(a,1));
 for i = 1:size(a,1)
