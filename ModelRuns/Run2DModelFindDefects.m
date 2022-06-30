@@ -117,7 +117,7 @@ fieldSettings.maxF = round(fieldSettings.motileSteps/fieldSettings.FrameSkip);
 
 [data,trackableData,toMappings,fromMappings] = processModelPCs(PCs,procSettings,fieldSettings);
 
-[negDefCents,negDefOris,posDefCents,posDefOris] = measureDefects(trackableData,fieldSettings,procSettings);
+[negDefCents,negDefOris,posDefCents,posDefOris] = measureDefects(trackableData,endField,procSettings);
 
 %For this tracking function to work, ensure FAST's tracking, Progress Bar and helperFuncs folders are added
 %to the path.
