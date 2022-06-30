@@ -1,4 +1,4 @@
-function [procDefTracks,trackSettings] = trackDefectsFAST(pDposition,nDposition,pDorientation,nDorientation,fS,pS,dt)
+function [procDefTracks,trackSettings,fromMappings,toMappings] = trackDefectsFAST(pDposition,nDposition,pDorientation,nDorientation,fS,pS,dt)
 
 %Loop over timepoints
 for t = 1:size(pDorientation,2)
@@ -38,8 +38,8 @@ trackSettings.pseudoTracks = false; %Variable set to true in extractFeatureEngin
 
 trackSettings.dt = dt;
 trackSettings.pixSize = pS.pixSize;
-trackSettings.maxX = fS.fieldWidth;
-trackSettings.maxY = fS.fieldHeight;
+trackSettings.maxX = fS.xWidth;
+trackSettings.maxY = fS.yHeight;
 trackSettings.maxF = trackSettings.maxFrame;
 
 debugSet = true; %Prevents modal locking of progress bars
@@ -61,7 +61,7 @@ for i = 1:size(trackDataNames,1)
     end
 end
 
-[procDefTracks,~,~] = processTracks(rawTracks,rawFromMappings,rawToMappings,trackSettings,trackTimes,debugSet);
+[procDefTracks,fromMappings,toMappings] = processTracks(rawTracks,rawFromMappings,rawToMappings,trackSettings,trackTimes,debugSet);
 
 %Assign tracks to two separate populations so you can easily use FAST's
 %plotting methods

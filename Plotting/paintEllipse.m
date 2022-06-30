@@ -105,7 +105,7 @@ if strcmp(boundaryConds,'periodic')
     outImg(end-fullWindow:end-halfWindow-2,:) = jointChunk4;
 end
 
-outImg(:,end-halfWindow:end) = [];
+outImg(:,end-halfWindow+1:end) = [];
 outImg(:,1:halfWindow) = [];
-outImg(end-halfWindow:end,:) = [];
+outImg(end-halfWindow+1:end,:) = [];
 outImg(1:halfWindow,:) = [];

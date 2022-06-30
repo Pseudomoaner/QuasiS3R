@@ -1,4 +1,4 @@
-function [negDefCents,negDefOris,posDefCents,posDefOris] = measureDefects(trackableData,fieldSettings,procSettings)
+function [negDefCents,negDefOris,posDefCents,posDefOris] = measureDefects(trackableData,endField,procSettings)
 
 negDefCents = cell(size(trackableData.Centroid,1),1);
 posDefCents = cell(size(trackableData.Centroid,1),1);
@@ -6,10 +6,9 @@ posDefOris = cell(size(trackableData.Centroid,1),1);
 negDefOris = cell(size(trackableData.Centroid,1),1);
 
 plotting = false; %Set to true for debugging
-imgDir = 'C:\Users\olijm\Desktop\TmpImgs';
 
 for i = 1:size(trackableData.Centroid,2)
-    imgDat = fieldReconst(trackableData,fieldSettings,procSettings,i);
+    imgDat = fieldReconst(trackableData,endField,procSettings,i);
     oriDat = findImageOrients(imgDat,procSettings.tensorSize/procSettings.pixSize);
     
     oriX = cos(oriDat);
