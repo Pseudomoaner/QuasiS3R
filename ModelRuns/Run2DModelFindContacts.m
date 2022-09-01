@@ -16,6 +16,7 @@ fieldSettings.postDivMovement = 'reverse'; %How the daughter cell should move fo
 fieldSettings.growthRate = 0.0; %Average increase in aspect ratio over one unit of time.
 fieldSettings.divThresh = 8; %Aspect ratio at which the cell should divide.
 fieldSettings.areaFrac = 0.3; %Fraction of the total area that should be occupied by cells.
+fieldSettings.killThresh = 1000; %Threshold number of hits for motility to be deactivated
 
 %Choose your cell and barrier settings
 barrierSettings.type = 'none'; %Type of static barriers that should be present in simulation - either none or loaded
@@ -30,7 +31,7 @@ cellSettings.f = 1; %Pushing force applied by each rod
 cellSettings.r = 0; %Reversal rate associated with each rod
 cellSettings.c = [1,0.5,0]; %Initial colour vector for each rod
 cellSettings.pop = 's'; %Population label of cells
-cellSettings.fire = 0; %Firing rate of cells
+cellSettings.fire = 0.00001; %Firing rate of cells - must be non-zero for contact detection to trigger
 
 %Output settings
 dispSettings.saveFrames = true; %Whether or not to save visualisations of each sampled timepoint
@@ -102,4 +103,4 @@ fieldSettings.maxF = round(fieldSettings.motileSteps/fieldSettings.FrameSkip);
 [data,trackableData,toMappings,fromMappings] = processModelPCs(PCs,procSettings,fieldSettings);
 
 fullMatOut = [RootSim,filesep,outputMatName];
-save(fullMatOut,'data','trackableData','toMappings','fromMappings','fieldSettings','cellSettings','procSettings','samplingRate','startMotileDt','endField')
+save(fullMatOut,'data','trackableData','toMappings','fromMappings','fieldSettings','cellSettings','procSettings','samplingRate','startMotileDt','endField','contactSet')
