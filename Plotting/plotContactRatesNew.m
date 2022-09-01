@@ -5,23 +5,28 @@
 clear all
 close all
 
-root = 'C:\Users\olijm\Google Drive\CDI_modelling\fire3';
-branch = 'simulationResults_ContactData_F';
-twigs = {'0pt5.mat','0pt625.mat','0pt75.mat','0pt875.mat','1.mat','1pt125.mat','1pt25.mat','1pt375.mat','1pt5.mat','1pt625.mat','1pt75.mat','1pt875.mat','2.mat'};
+root = '/home/omeacock/Documents/SPRruns/ContactRateRuns';
+branch = 'SimulationResults_F=%f.mat';
+% twigs = {'0pt5.mat','0pt625.mat','0pt75.mat','0pt875.mat','1.mat','1pt125.mat','1pt25.mat','1pt375.mat','1pt5.mat','1pt625.mat','1pt75.mat','1pt875.mat','2.mat'};
+fList = 0.5:0.125:2;
 
 figure(1)
 ax1 = gca;
 hold(ax1,'on')
 
-meanContNoStore = zeros(size(twigs));
-contRateStore = zeros(size(twigs));
-vStore = zeros(size(twigs));
+meanContNoStore = zeros(size(fList));
+contRateStore = zeros(size(fList));
+vStore = zeros(size(fList));
 
 minContTime = 5; %Discounts extremely transient contacts
 
-for b = 1:size(twigs,2)
-    load(fullfile(root,[branch,twigs{b}]))
+for fInd = 1:size(fList,2)
+    f = fList(fInd);
+    load(fullfile(root,sprintf(branch,f)))
     maxInd = size(contactSet{1},1);
+    
+    vDt = fieldSettings.FrameSkip * fieldSettings.motiledt; %The time between sampled points for trajectories
+    cDt = fieldSettings.FireSkip * fieldSettings.motiledt; %The time between sampled points for contact detection
     
     meanContNoTmp = zeros(size(contactSet{1},1),1);
     contRateTmp = zeros(size(contactSet{1},1),1);
@@ -42,15 +47,15 @@ for b = 1:size(twigs,2)
         %Set any initial contacts to zero (contact rate is based on new
         %contacts only)
         expandedConts(expandedConts(:,1)==1,:) = 0;
-        contRateTmp(r) = sum(sum(expandedConts,2)>minContTime)/(size(contactSet,2)*fieldSettings.dt);
+        contRateTmp(r) = sum(sum(expandedConts,2)>minContTime)/(size(contactSet,2)*cDt);
     end
 
-    vStore(b) = mean(arrayfun(@(x)mean(x.vmag),data));
-    meanContNoStore(b) = mean(meanContNoTmp);
-    contRateStore(b) = mean(contRateTmp);
+    vStore(fInd) = mean(arrayfun(@(x)mean(x.vmag),data));
+    meanContNoStore(fInd) = mean(meanContNoTmp);
+    contRateStore(fInd) = mean(contRateTmp);
 
-    currCol = [(b-1)/size(twigs,2),1-((b-1)/size(twigs,2)),1];
-    plot(ax1,vStore(b),contRateStore(b),'.','MarkerSize',20,'Color',currCol)
+    currCol = [(fInd-1)/size(fList,2),1-((fInd-1)/size(fList,2)),1];
+    plot(ax1,vStore(fInd),contRateStore(fInd),'.','MarkerSize',20,'Color',currCol)
 end
 
 alphK = vStore'\contRateStore';
