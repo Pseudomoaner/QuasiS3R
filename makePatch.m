@@ -126,6 +126,17 @@ switch patchSettings.patchType
         patchSpecs.seedsX = seedsX;
         patchSpecs.seedsY = seedsY;
         patchSpecs.popLabels = popLabels;
+    case 'Homogeneous'
+        newPopSize = round(size(inField.xCells,1)*patchSettings.popFrac);
+        newPopInds = randperm(size(inField.xCells,1),newPopSize);
+        
+        inField.popCells(newPopInds) = patchSettings.popLabel;
+        inField.fCells(newPopInds) = patchSettings.force;
+        inField.cCells(newPopInds,:) = repmat(patchSettings.colour,newPopSize,1);
+        inField.rCells(newPopInds) = patchSettings.reversalRate;
+        inField.fireCells(newPopInds) = patchSettings.fireRate;
+        
+        outField = inField;
 end
 end
 
