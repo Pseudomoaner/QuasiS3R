@@ -13,6 +13,8 @@ fList = 0.5:0.125:2;
 figure(1)
 ax1 = gca;
 hold(ax1,'on')
+ax2 = axes('Position',[0.2,0.6,0.25,0.3],'Units','Normalized');
+hold(ax2,'on')
 
 meanContNoStore = zeros(size(fList));
 contRateStore = zeros(size(fList));
@@ -55,14 +57,20 @@ for fInd = 1:size(fList,2)
     contRateStore(fInd) = mean(contRateTmp);
 
     currCol = [(fInd-1)/size(fList,2),1-((fInd-1)/size(fList,2)),1];
-    plot(ax1,vStore(fInd),contRateStore(fInd),'.','MarkerSize',20,'Color',currCol)
+    plot(ax1,vStore(fInd),contRateStore(fInd),'.','MarkerSize',20,'Color',currCol)    
+    plot(ax2,vStore(fInd),meanContNoStore(fInd),'.','MarkerSize',20,'Color',currCol)
 end
 
 alphK = vStore'\contRateStore';
-plot([0,0.3],[0,0.3*alphK],'--','LineWidth',1.5,'Color','k')
+plot(ax1,[0,0.3],[0,0.3*alphK],'--','LineWidth',1.5,'Color','k')
+plot(ax2,[0,0.3],[5,5],'--','LineWidth',1.5,'Color','k')
 
 ax1.LineWidth = 1.5;
 ax1.Box = 'on';
+
+ax2.LineWidth = 1.5;
+ax2.Box = 'on';
+axis(ax2,[0,0.3,0,7])
 
 xlabel(ax1,'Average rod velocity')
 ylabel(ax1,'Average lost contact rate')
