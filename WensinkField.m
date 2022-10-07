@@ -166,7 +166,7 @@ classdef WensinkField
             end
 
             if inputCheck(14)
-                validateattributes(fS.frictionAnisotropy,{'numeric'},{'scalartext','positive'})
+                validateattributes(fS.frictionAnisotropy,{'numeric'},{'scalar','nonnegative'})
                 obj.frictionAnisotropy = fS.frictionAnisotropy;
             else
                 obj.frictionAnisotropy = 1;
