@@ -36,7 +36,7 @@ classdef WensinkField
 
         U0 %Potential Amplitude
         f0 %Stoksian friction coefficient
-        frictionType %What kind of frictional force should be applied to the rods (isotropic or anisotropic)
+        frictionAnisotropy %How isotropic the friction applied to each rod should be - 0 implies isotropic, 1 implies the default anisotropy (from the original Wensink model)
         zElasticity %Elasticity of the confining material in the z-direction
         lam %Screening length of Yukawa segements
         contactRange %Range of CDI system
@@ -54,7 +54,7 @@ classdef WensinkField
     end
     methods
         function obj = WensinkField(fS)
-            inputCheck = isfield(fS,{'xWidth','yHeight','zDepth','U0','lam','boundaryConditions','f0','zElasticity','contactRange','killType','hitRateType','colJigRate','killThresh','frictionType'});
+            inputCheck = isfield(fS,{'xWidth','yHeight','zDepth','U0','lam','boundaryConditions','f0','zElasticity','contactRange','killType','hitRateType','colJigRate','killThresh','frictionAnisotropy'});
 
             %Check and store domain size settings
             if ~inputCheck(1) || ~inputCheck(2) %Must have the domain size
@@ -166,14 +166,10 @@ classdef WensinkField
             end
 
             if inputCheck(14)
-                validateattributes(fS.frictionType,{'char'},{'scalartext'})
-                if ~any(strcmp({'isotropic','anisotropic'},fS.frictionType))
-                    error('Expected friction type to be specified as either "isotropic" or "anisotropic".')
-                else
-                    obj.frictionType = fS.frictionType;
-                end
+                validateattributes(fS.frictionAnisotropy,{'numeric'},{'scalartext','positive'})
+                obj.frictionAnisotropy = fS.frictionAnisotropy;
             else
-                obj.frictionType = 'anisotropic';
+                obj.frictionAnisotropy = 1;
             end
 
             %Check to see if GPU and/or .mex files are available for
@@ -721,7 +717,7 @@ classdef WensinkField
         
         function [drdt,dthetadt,dphidt] = calcVelocities(obj,stepType)
             %Calculates the rate of translation and rotation for all cells             
-            [fT,fR,fPar] = calcFrictionTensors(obj.aCells,obj.uCells,obj.f0,obj.frictionType);
+            [fT,fR,fPar] = calcFrictionTensors(obj.aCells,obj.uCells,obj.f0,obj.frictionAnisotropy);
             
             %I will provide three methods for calculating the potential
             %between rods (the slowest part of the model). Option 1, the
