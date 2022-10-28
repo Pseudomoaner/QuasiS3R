@@ -851,7 +851,7 @@ classdef WensinkField
             
             %Draw barrier (as an image) and break into separate rgb
             %channels
-            background = imresize(double(~obj.boundaryDesign),Upsample); %We'll do the smoothing later
+            background = imresize(double(~obj.boundaryDesign),Upsample*(obj.xWidth/size(obj.boundaryDesign,2))); %We'll do the smoothing later
             imgr = imgaussfilt(double(background),fullSF*obj.lam);
             imgg = imgaussfilt(double(background),fullSF*obj.lam);
             imgb = imgaussfilt(double(background),fullSF*obj.lam);
