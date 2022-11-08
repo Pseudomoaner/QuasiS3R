@@ -33,6 +33,8 @@ for i = 1:size(xs,1)
     xPx = xPxs(i);
     yPx = yPxs(i);
     theta = thetas(i);
+    edgeLenPx = edgeLens(i)/pxSize;
+    edgeWidPx = edgeWids(i)/pxSize;
     
     %Generate a cut out bit of the coordinate grid for calculating the
     %rectangle over.
@@ -41,7 +43,7 @@ for i = 1:size(xs,1)
     xRot = cosd(theta) * xGrid - sind(theta) * yGrid;
     yRot = sind(theta) * xGrid + cosd(theta) * yGrid;
     
-    triImg = and(and(xRot < edgeLens/2,xRot > -edgeLens/2),and(yRot < edgeWids/2,yRot > -edgeWids/2));
+    rectImg = and(and(xRot < edgeLenPx/2,xRot > -edgeLenPx/2),and(yRot < edgeWidPx/2,yRot > -edgeWidPx/2));
     
     %Do initial drawing
     minXbig = xPx;
@@ -53,7 +55,7 @@ for i = 1:size(xs,1)
         %Don't need to worry about triangles that are outside the actual field,
         %as the periodic boundary conditions will move them back in.
         existingImg = outImg(minYbig:maxYbig,minXbig:maxXbig);
-        existingImg(triImg) = intensities(i);
+        existingImg(rectImg) = intensities(i);
         outImg(minYbig:maxYbig,minXbig:maxXbig) = existingImg;
     else %Non-periodic boundary conditions. Here you do have to worry about rods outside the main field.
         if and(and(xPx > -halfWindow,yPx > -halfWindow),and(xPx < (width/pxSize) + halfWindow,yPx < (height/pxSize) + halfWindow))
@@ -63,12 +65,12 @@ for i = 1:size(xs,1)
             maxYglob = min(maxYbig,floor(height/pxSize) + fullWindow - 1);
             
             minXloc = minXglob-minXbig+1;
-            maxXloc = size(triImg,2) - (maxXbig-maxXglob);
+            maxXloc = size(rectImg,2) - (maxXbig-maxXglob);
             minYloc = minYglob-minYbig+1;
-            maxYloc = size(triImg,1) - (maxYbig-maxYglob);
+            maxYloc = size(rectImg,1) - (maxYbig-maxYglob);
 
             existingImg = outImg(minYglob:maxYglob,minXglob:maxXglob);
-            existingImg(triImg) = intensities(i);
+            existingImg(rectImg) = intensities(i);
             outImg(minYglob:maxYglob,minXglob:maxXglob) = existingImg;
         end
     end
