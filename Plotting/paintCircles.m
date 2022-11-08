@@ -9,10 +9,10 @@ radiiPxs = radii/pxSize;
 %These are cludges to account for those very rare occasions when a defect is
 %over the edge of the final pixel - just subtract or add one to bring it within
 %range.
-xPxs(xPxs > size(inImg,2)) = xPxs(xPxs > size(inImg,2)) - 1;
-yPxs(yPxs > size(inImg,1)) = xPxs(yPxs > size(inImg,1)) - 1;
-xPxs(xPxs == 0) = 1;
-yPxs(yPxs == 0) = 1;
+xPxs(xPxs > size(inImg,2)) = size(inImg,2) - 1;
+yPxs(yPxs > size(inImg,1)) = size(inImg,1) - 1;
+xPxs(xPxs <= 0) = 1;
+yPxs(yPxs <= 0) = 1;
 
 halfWindow = round(max(radiiPxs)) + 3;
 fullWindow = 2*halfWindow + 1; %Size of entire cutout
