@@ -42,10 +42,10 @@ for t = 1:length(trackableData.Length)
                 end
             end
         case 'None' %Will try to split by population labels
-            pop1 = trackableData.Population{t} == 's';
-            pop2 = trackableData.Population{t} == 't';
+            pop1 = trackableData.Population{t} == 'm';
+            pop2 = trackableData.Population{t} == 's';
             
-            colSet = [0.8*pop1,0.5*pop1 + 0.3*pop2, 0.9*pop2];
+            colSet = [0.8*pop2,0.2*pop2 + 0.2*pop1, 0.9*pop1];
     end
     
     backImg = ones(round(eF.yHeight*Upsample),round(eF.xWidth*Upsample));
@@ -61,6 +61,11 @@ for t = 1:length(trackableData.Length)
     imgg = paintEllipse(backImg,xs,ys,majors,minors,phis,colSet(:,2),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
     imgb = paintEllipse(backImg,xs,ys,majors,minors,phis,colSet(:,3),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
     
+    ui = trackableData.Population{t} == 'm';
+    imgr = paintCircles(imgr,xs(ui)+cosd(phis(ui)).*(majors(ui)/2.2),ys(ui)-sind(phis(ui)).*(majors(ui)/2.2),ones(sum(ui),1)/2,zeros(sum(ui),1),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
+    imgg = paintCircles(imgg,xs(ui)+cosd(phis(ui)).*(majors(ui)/2.2),ys(ui)-sind(phis(ui)).*(majors(ui)/2.2),ones(sum(ui),1)/2,zeros(sum(ui),1),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
+    imgb = paintCircles(imgb,xs(ui)+cosd(phis(ui)).*(majors(ui)/2.2),ys(ui)-sind(phis(ui)).*(majors(ui)/2.2),ones(sum(ui),1)/2,zeros(sum(ui),1),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
+    
     %Do paintjobs for defects
     phDef = defSlice.sign{t} == 1;
     nhDef = defSlice.sign{t} == -1;
@@ -68,20 +73,29 @@ for t = 1:length(trackableData.Length)
     %+1/2
     xs = defSlice.x{t}(phDef);
     ys = defSlice.y{t}(phDef);
+    phis = -defSlice.phi{t}(phDef);
     
     imgr = paintCircles(imgr,xs,ys,ones(size(xs))*2,ones(size(xs)),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
     imgg = paintCircles(imgg,xs,ys,ones(size(xs))*2,zeros(size(xs)),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
     imgb = paintCircles(imgb,xs,ys,ones(size(xs))*2,zeros(size(xs)),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
     
+    imgr = paintRectangles(imgr,xs+cosd(phis)*2.5,ys-sind(phis)*2.5,phis,ones(size(xs))*5,ones(size(xs)),ones(size(xs)),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
+    imgg = paintRectangles(imgg,xs+cosd(phis)*2.5,ys-sind(phis)*2.5,phis,ones(size(xs))*5,ones(size(xs)),zeros(size(xs)),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
+    imgb = paintRectangles(imgb,xs+cosd(phis)*2.5,ys-sind(phis)*2.5,phis,ones(size(xs))*5,ones(size(xs)),zeros(size(xs)),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
+    
     %-1/2
     xs = defSlice.x{t}(nhDef);
     ys = defSlice.y{t}(nhDef);
-    phis = defSlice.phi{t}(nhDef);
+    phis = -defSlice.phi{t}(nhDef);
     
     imgr = paintTriangles(imgr,xs,ys,phis,ones(size(xs))*4,zeros(size(xs)),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
     imgg = paintTriangles(imgg,xs,ys,phis,ones(size(xs))*4,zeros(size(xs)),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
     imgb = paintTriangles(imgb,xs,ys,phis,ones(size(xs))*4,ones(size(xs)),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
 
+    imgr = paintRectangles(imgr,[xs+cosd(phis+30)*2.5;xs+cosd(phis-90)*2.5;xs+cosd(phis+150)*2.5],[ys-sind(phis+30)*2.5;ys-sind(phis-90)*2.5;ys-sind(phis+150)*2.5],[phis+30;phis-90;phis+150],ones(size(xs,1)*3,1)*5,ones(size(xs,1)*3,1),zeros(size(xs,1)*3,1),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
+    imgg = paintRectangles(imgg,[xs+cosd(phis+30)*2.5;xs+cosd(phis-90)*2.5;xs+cosd(phis+150)*2.5],[ys-sind(phis+30)*2.5;ys-sind(phis-90)*2.5;ys-sind(phis+150)*2.5],[phis+30;phis-90;phis+150],ones(size(xs,1)*3,1)*5,ones(size(xs,1)*3,1),zeros(size(xs,1)*3,1),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
+    imgb = paintRectangles(imgb,[xs+cosd(phis+30)*2.5;xs+cosd(phis-90)*2.5;xs+cosd(phis+150)*2.5],[ys-sind(phis+30)*2.5;ys-sind(phis-90)*2.5;ys-sind(phis+150)*2.5],[phis+30;phis-90;phis+150],ones(size(xs,1)*3,1)*5,ones(size(xs,1)*3,1),ones(size(xs,1)*3,1),1/Upsample,eF.boundConds,eF.xWidth,eF.yHeight);
+    
     %Smooth to make nicer looking
     imgr = imgaussfilt(imgr,Upsample*eF.lam/4);
     imgg = imgaussfilt(imgg,Upsample*eF.lam/4);
