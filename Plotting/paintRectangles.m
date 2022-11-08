@@ -1,20 +1,22 @@
-function outImg = paintCircles(inImg,xs,ys,radii,intensities,pxSize,boundaryConds,width,height)
+function outImg = paintRectangles(inImg,xs,ys,thetas,edgeLens,edgeWids,intensities,pxSize,boundaryConds,width,height)
 %PAINTTRIANGLES paints a set of triangles of the given position, scale, 
 %colour and orientation.
 
 xPxs = ceil(xs/pxSize);
 yPxs = ceil(ys/pxSize);
-radiiPxs = radii/pxSize;
 
 %These are cludges to account for those very rare occasions when a defect is
 %over the edge of the final pixel - just subtract or add one to bring it within
 %range.
-xPxs(xPxs > size(inImg,2)) = size(inImg,2) - 1;
-yPxs(yPxs > size(inImg,1)) = size(inImg,1) - 1;
-xPxs(xPxs <= 0) = 1;
-yPxs(yPxs <= 0) = 1;
+xPxs(xPxs > size(inImg,2)) = xPxs(xPxs > size(inImg,2)) - 1;
+yPxs(yPxs > size(inImg,1)) = xPxs(yPxs > size(inImg,1)) - 1;
+xPxs(xPxs == 0) = 1;
+yPxs(yPxs == 0) = 1;
 
-halfWindow = round(max(radiiPxs)) + 3;
+offsets = (edgeLens+edgeWids)/2;
+offsetPxs = ceil(offsets/pxSize);
+
+halfWindow = round(max(offsetPxs)*2) + 3;
 fullWindow = 2*halfWindow + 1; %Size of entire cutout
 
 %Prepare image by padding it out.
@@ -30,13 +32,18 @@ end
 for i = 1:size(xs,1)
     xPx = xPxs(i);
     yPx = yPxs(i);
-    radiusPx = radiiPxs(i);
+    theta = thetas(i);
+    edgeLenPx = edgeLens(i)/pxSize;
+    edgeWidPx = edgeWids(i)/pxSize;
     
     %Generate a cut out bit of the coordinate grid for calculating the
-    %triangle over.
+    %rectangle over.
     [xGrid,yGrid] = meshgrid(-halfWindow:halfWindow,-halfWindow:+halfWindow);
     
-    circImg = sqrt(xGrid.^2 + yGrid.^2) < radiusPx;
+    xRot = cosd(theta) * xGrid - sind(theta) * yGrid;
+    yRot = sind(theta) * xGrid + cosd(theta) * yGrid;
+    
+    rectImg = and(and(xRot < edgeLenPx/2,xRot > -edgeLenPx/2),and(yRot < edgeWidPx/2,yRot > -edgeWidPx/2));
     
     %Do initial drawing
     minXbig = xPx;
@@ -48,7 +55,7 @@ for i = 1:size(xs,1)
         %Don't need to worry about triangles that are outside the actual field,
         %as the periodic boundary conditions will move them back in.
         existingImg = outImg(minYbig:maxYbig,minXbig:maxXbig);
-        existingImg(circImg) = intensities(i);
+        existingImg(rectImg) = intensities(i);
         outImg(minYbig:maxYbig,minXbig:maxXbig) = existingImg;
     else %Non-periodic boundary conditions. Here you do have to worry about rods outside the main field.
         if and(and(xPx > -halfWindow,yPx > -halfWindow),and(xPx < (width/pxSize) + halfWindow,yPx < (height/pxSize) + halfWindow))
@@ -58,12 +65,12 @@ for i = 1:size(xs,1)
             maxYglob = min(maxYbig,floor(height/pxSize) + fullWindow - 1);
             
             minXloc = minXglob-minXbig+1;
-            maxXloc = size(circImg,2) - (maxXbig-maxXglob);
+            maxXloc = size(rectImg,2) - (maxXbig-maxXglob);
             minYloc = minYglob-minYbig+1;
-            maxYloc = size(circImg,1) - (maxYbig-maxYglob);
+            maxYloc = size(rectImg,1) - (maxYbig-maxYglob);
 
             existingImg = outImg(minYglob:maxYglob,minXglob:maxXglob);
-            existingImg(circImg) = intensities(i);
+            existingImg(rectImg) = intensities(i);
             outImg(minYglob:maxYglob,minXglob:maxXglob) = existingImg;
         end
     end
