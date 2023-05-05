@@ -62,7 +62,6 @@ targetSimTime = 500; %Target motile simulation time
 contactFind = true; %Whether or not to return structures containing instantaneous cell-cell contact data
 
 %% Part 0: Initialize field for this simulation
-rng(1)
 startField = WensinkField(fieldSettings);
 startField = startField.populateField(barrierSettings,cellSettings,fieldSettings.areaFrac);
 startField = startField.setColours('Position');
