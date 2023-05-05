@@ -1,4 +1,4 @@
-function outField = makePatch(inField,patchSettings)
+function [outField,patchSpecs] = makePatch(inField,patchSettings)
 %MAKEPATCH creates a localised patch of a particular cell type in the
 %centre of the simulation domain.
 %
@@ -9,8 +9,11 @@ function outField = makePatch(inField,patchSettings)
 %       patch
 %
 %   OUTPUTS:
-%       -outField: The WensinkField simulation with the circular patch
+%       -outField: The WensinkField simulation with the patch
 %       applied.
+%       -patchSpecs: The specifications of the Voronoi field (empty if
+%       'Circle' option is chosen). Useful for ensuring continuum model is
+%       initialised with the same configuration.
 %
 %   Author: Oliver J. Meacock, (c) 2021
 
@@ -56,6 +59,8 @@ switch patchSettings.patchType
         inField.popCells(changeInds) = repmat(patchSettings.popLabel,sum(changeInds),1);
 
         outField = inField;
+
+        patchSpecs = [];
     case 'Voronoi'
         noSeeds = round(inField.xWidth*inField.yHeight*patchSettings.seedDensity);
         noSeeds1 = round(noSeeds * patchSettings.seedFrac);
@@ -114,6 +119,23 @@ switch patchSettings.patchType
             end
         end
 
+        outField = inField;
+
+        %Create a storage variable that can pass details of the simulation
+        %configuration to the continuum model
+        patchSpecs.seedsX = seedsX;
+        patchSpecs.seedsY = seedsY;
+        patchSpecs.popLabels = popLabels;
+    case 'Homogeneous'
+        newPopSize = round(size(inField.xCells,1)*patchSettings.popFrac);
+        newPopInds = randperm(size(inField.xCells,1),newPopSize);
+        
+        inField.popCells(newPopInds) = patchSettings.popLabel;
+        inField.fCells(newPopInds) = patchSettings.force;
+        inField.cCells(newPopInds,:) = repmat(patchSettings.colour,newPopSize,1);
+        inField.rCells(newPopInds) = patchSettings.reversalRate;
+        inField.fireCells(newPopInds) = patchSettings.fireRate;
+        
         outField = inField;
 end
 end

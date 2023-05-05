@@ -25,8 +25,8 @@ if strcmp(boundaryConds,'periodic')
     outImg = [outImg(end-halfWindow+1:end,:);outImg;outImg(1:halfWindow,:)];
     outImg = [outImg(:,end-halfWindow+1:end),outImg,outImg(:,1:halfWindow)];
 else %This isn't really super necessary, but means you have to do less coding later as it makes periodic and non-periodic image coordinate spaces the same.
-    outImg = [zeros(halfWindow,size(outImg,2));outImg;zeros(halfWindow,size(outImg,2))];
-    outImg = [zeros(size(outImg,1),halfWindow),outImg,zeros(size(outImg,1),halfWindow)];
+    outImg = [zeros(halfWindow,size(outImg,2));outImg;zeros(halfWindow+1,size(outImg,2))];
+    outImg = [zeros(size(outImg,1),halfWindow),outImg,zeros(size(outImg,1),halfWindow+1)];
 end
 
 for i = 1:size(xs,1)

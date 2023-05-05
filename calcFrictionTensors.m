@@ -1,4 +1,4 @@
-function [fT,fR,fPar] = calcFrictionTensors(a,u,f0,fricType)
+function [fT,fR,fPar] = calcFrictionTensors(a,u,f0,fricAnis)
 %CALCFRICTIONTENSORS calculates the translational and rotational friction 
 %tensors for each rod.
 %
@@ -6,9 +6,10 @@ function [fT,fR,fPar] = calcFrictionTensors(a,u,f0,fricType)
 %       -a: The aspect ratios of all the rods
 %       -u: The orientation unit vectors of all the rods
 %       -f0: The Stokesian friction coefficient
-%       -fricType: Specifies whether the current simulation contains
-%       isotropic or anisotropic translational friction for individual
-%       rods.
+%       -fricAnis: Specifies the extent of the anisotropy of the friction
+%       tensor. Set to zero for isotropic, 1 for the original value as
+%       used in the Wensink framework. Other values are inter/extrapolated
+%       between these points.
 %
 %   OUTPUTS:
 %       -fT: The translational friction tensor for each rod
@@ -20,10 +21,9 @@ function [fT,fR,fPar] = calcFrictionTensors(a,u,f0,fricType)
 
 [fPar,fPerp,fRot] = calcGeomFactors(a);
 
-if strcmp(fricType,'isotropic')
-    fPar = (fPar + fPerp)/2; %Take the mean of the two components for each rod
-    fPerp = fPar;
-end
+meanF = (fPar + fPerp)/2; %Take the mean of the two components for each rod
+fPerp = meanF + ((fPerp-fPar)*fricAnis)/2;
+fPar = meanF - ((fPerp-fPar)*fricAnis)/2;
 
 fR = f0 * fRot;
 fT = zeros(3,3,size(a,1));
