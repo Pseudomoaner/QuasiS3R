@@ -19,11 +19,11 @@ function [fT,fR,fPar] = calcFrictionTensors(a,u,f0,fricAnis)
 %
 %   Author: Oliver J. Meacock, 2020
 
-[fPar,fPerp,fRot] = calcGeomFactors(a);
+[fPar0,fPerp0,fRot] = calcGeomFactors(a);
 
-meanF = (fPar + fPerp)/2; %Take the mean of the two components for each rod
-fPerp = meanF + ((fPerp-fPar)*fricAnis)/2;
-fPar = meanF - ((fPerp-fPar)*fricAnis)/2;
+meanF = (fPar0 + fPerp0)/2; %Take the mean of the two components for each rod
+fPerp = meanF + ((fPerp0-fPar0)*fricAnis)/2;
+fPar = meanF - ((fPerp0-fPar0)*fricAnis)/2;
 
 fR = f0 * fRot;
 fT = zeros(3,3,size(a,1));

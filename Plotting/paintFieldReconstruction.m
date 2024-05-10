@@ -5,7 +5,7 @@ Downsample = 2; %Extent to which the resulting image should be downsized to make
 majorBoost = 0.2; %Extra factor by which to make cells longer for rendering purposes
 minorBoost = 0.1; %Extra factor by which to make cells wider for rendering purposes           
 
-for t = 1:length(trackableData.Length)
+for t = 1:50:length(trackableData.Length)
     switch dS.colourCells
         case 'Orientation'
             map = colormap('hsv');
@@ -26,14 +26,20 @@ for t = 1:length(trackableData.Length)
             colSet = zeros(size(trackableData.Length{t},1),3);
             for k = 1:size(trackableData.Length{t},1)
                 currHits = min(trackableData.Hit{t}(k),maxHit);
-                if currHits > 0 %Dead cells are set as magenta shading to gray
-                    colFac = (currHits)/(maxHit+1.5);
-                    colSet(k,:) = 1-[1,0.5+colFac*0.5,0.05+colFac*0.95];%[1-colFac,0.8-colFac*0.8,0.05-colFac*0.05];%-[0.9-0.7*colFac,0.2*colFac,0.5-colFac*0.3];%-[0.9,colFac*0.9,0.4+colFac*0.5];
-                elseif trackableData.FireRate{t}(k) > 0 %Firing cells are set as light blue
-                    colSet(k,:) = 1-([32,128,196]/255);
-                elseif trackableData.FireRate{t}(k) == 0 %Unhit cells are set as yellow
-                    colSet(k,:) = 1-([255, 120, 10]/255);
+                colFac = (currHits)/(maxHit+1.5);
+                if trackableData.Population{t}(k) == 's'
+                    colSet(k,:) = 1-[1,0.5+colFac*0.5,0.05+colFac*0.95];
+                elseif trackableData.Population{t}(k) == 't'
+                    colSet(k,:) = 1-[0.2 + colFac*0.8,0.6 + colFac*0.4,1];
                 end
+                % if currHits > 0 %Dead cells are set as magenta shading to gray
+                %     colFac = (currHits)/(maxHit+1.5);
+                %     colSet(k,:) = 1-[1,0.5+colFac*0.5,0.05+colFac*0.95];%[1-colFac,0.8-colFac*0.8,0.05-colFac*0.05];%-[0.9-0.7*colFac,0.2*colFac,0.5-colFac*0.3];%-[0.9,colFac*0.9,0.4+colFac*0.5];
+                % elseif trackableData.FireRate{t}(k) > 0 %Firing cells are set as light blue
+                %     colSet(k,:) = 1-([32,128,196]/255);
+                % elseif trackableData.FireRate{t}(k) == 0 %Unhit cells are set as yellow
+                %     colSet(k,:) = 1-([255, 120, 10]/255);
+                % end
             end
     end
     
